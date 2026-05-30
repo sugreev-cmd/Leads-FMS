@@ -831,5 +831,349 @@ window.onload=function(){
   if(saved&&PASSWORDS[saved]){currentRole=saved;enterApp();}
 };
 </script>
+  <!-- ═══════════════════════════════════════════════════════
+     ASTORIA FMS v2 — COMPLETE OVERRIDE
+     Paste this entire block before </body> in your HTML
+     ═══════════════════════════════════════════════════════ -->
+
+<style>
+/* ─── MOBILE TOPBAR FIX ─────────────────────────────────── */
+@media(max-width:768px){
+  .topbar{padding:0!important;height:auto!important;flex-direction:column!important;align-items:stretch!important}
+  .tb-nav{display:flex!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch;scrollbar-width:none;height:auto!important;padding:0!important;background:rgba(0,0,0,.22);width:100%;flex-shrink:0;border-top:1px solid rgba(255,255,255,.09)}
+  .tb-nav::-webkit-scrollbar{display:none}
+  .tb-ni{white-space:nowrap!important;padding:9px 16px!important;font-size:11px!important;height:auto!important;flex-shrink:0!important;border-bottom:none!important;border-top:2px solid transparent;display:flex;align-items:center;gap:4px}
+  .tb-ni.active{color:#fff!important;border-top-color:#C8930A!important;background:rgba(255,255,255,.07)}
+  .logout-btn{display:inline-flex!important;font-size:10px!important;padding:5px 8px!important}
+  .app-content{padding-bottom:66px!important}
+  /* TABLE SCROLL */
+  .tm-scroll-hint{display:flex!important}
+  .mis-table-wrap{overflow-x:auto!important;-webkit-overflow-scrolling:touch}
+  .adv-view-body{grid-template-columns:1fr 1fr!important}
+}
+/* ─── TABLE MIN WIDTHS ───────────────────────────────────── */
+.tm-table{min-width:620px}
+.mis-table{min-width:750px}
+/* ─── SCROLL HINT ────────────────────────────────────────── */
+.tm-scroll-hint{display:none;align-items:center;gap:5px;font-size:10px;color:var(--orange);padding:4px 0 8px;font-weight:600}
+/* ─── MONTH FILTER ───────────────────────────────────────── */
+.mf-row{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.mf-pill{padding:5px 13px;border-radius:20px;font-size:11px;font-weight:600;border:1.5px solid var(--border);background:var(--surface);color:var(--sub);cursor:pointer;transition:all .18s}
+.mf-pill:hover{border-color:var(--blue);color:var(--blue)}.mf-pill.on{background:var(--nav);border-color:var(--nav);color:#fff}
+/* ─── ADVANCE VIEW ────────────────────────────────────────── */
+.av-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:10px;transition:all .2s}
+.av-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-1px)}
+.av-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:linear-gradient(135deg,#ECFDF5,#D1FAE5);border-bottom:1px solid rgba(5,150,105,.15);flex-wrap:wrap;gap:8px}
+.av-body{padding:14px 16px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.av-f{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px}
+.av-fl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin-bottom:4px}
+.av-fv{font-size:13px;font-weight:700;color:var(--text)}
+/* ─── ACTIVITY LOG ────────────────────────────────────────── */
+.act-row{display:flex;align-items:flex-start;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);transition:background .12s}
+.act-row:hover{background:var(--bg)}.act-row:last-child{border-bottom:none}
+.act-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.act-dt{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);min-width:65px;flex-shrink:0}
+/* ─── TOPBAR INNER ROW (mobile) ──────────────────────────── */
+.tb-inner-row{display:flex;align-items:center;justify-content:space-between;padding:0 12px;height:48px;flex-shrink:0;width:100%}
+</style>
+
+<script>
+(function(){
+'use strict';
+
+/* ── 1. MOBILE TOPBAR RESTRUCTURE ───────────────────── */
+function patchTopbar(){
+  if(window.innerWidth>768)return;
+  var tb=document.querySelector('.topbar');
+  if(!tb||tb.dataset.fixed)return;
+  tb.dataset.fixed='1';
+  var brand=tb.querySelector('.tb-brand'),nav=tb.querySelector('.tb-nav'),right=tb.querySelector('.tb-right');
+  if(!brand||!nav||!right)return;
+  var row=document.createElement('div');
+  row.className='tb-inner-row';
+  row.appendChild(brand);
+  row.appendChild(right);
+  tb.insertBefore(row,nav);
+}
+
+/* ── 2. ADD SCROLL HINT ABOVE TEAM TABLE ─────────────── */
+function addScrollHints(){
+  document.querySelectorAll('.tm-table,.mis-table').forEach(function(t){
+    var wrap=t.closest('.dcard-body,.mis-table-wrap');
+    if(!wrap||wrap.dataset.sh)return;
+    wrap.dataset.sh='1';
+    wrap.style.overflowX='auto';
+    wrap.style.webkitOverflowScrolling='touch';
+    var hint=document.createElement('div');
+    hint.className='tm-scroll-hint';
+    hint.innerHTML='←&nbsp;Scroll&nbsp;→';
+    wrap.insertBefore(hint,t);
+  });
+}
+
+/* ── 3. MONTH FILTER FOR DASHBOARD ──────────────────── */
+var dashFilt='all';
+window.setDashMonth=function(v,btn){
+  dashFilt=v;
+  document.querySelectorAll('#dashMFRow .mf-pill').forEach(function(b){b.classList.remove('on');});
+  if(btn)btn.classList.add('on');
+  buildDash&&buildDash();
+};
+
+function injectMonthFilter(){
+  if(document.getElementById('dashMFRow'))return;
+  var kg=document.querySelector('.kpi-grid');
+  if(!kg)return;
+  var row=document.createElement('div');
+  row.id='dashMFRow';row.className='mf-row';
+  row.innerHTML='<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dim)">Period:</span>'
+    +'<button class="mf-pill on" onclick="setDashMonth('all',this)">All Time</button>'
+    +'<button class="mf-pill" onclick="setDashMonth('this',this)">This Month</button>'
+    +'<button class="mf-pill" onclick="setDashMonth('last',this)">Last Month</button>'
+    +'<button class="mf-pill" onclick="setDashMonth('q',this)">This Quarter</button>';
+  kg.parentNode.insertBefore(row,kg);
+}
+
+/* ── 4. MONTH FILTER LOGIC ───────────────────────────── */
+window.filterByMonth=function(arr,filt){
+  if(!filt||filt==='all')return arr;
+  var n=new Date(),y=n.getFullYear(),m=n.getMonth();
+  return arr.filter(function(l){
+    var d=new Date(l.date||'2000-01-01');
+    if(filt==='this')return d.getFullYear()===y&&d.getMonth()===m;
+    if(filt==='last'){var lm=m===0?11:m-1,ly=m===0?y-1:y;return d.getFullYear()===ly&&d.getMonth()===lm;}
+    if(filt==='q'){var qm=Math.floor(m/3)*3;return d.getFullYear()===y&&d.getMonth()>=qm;}
+    return true;
+  });
+};
+
+/* ── 5. INJECT NEW NAV TABS ──────────────────────────── */
+function addNavTabs(){
+  var nav=document.querySelector('.tb-nav');
+  if(!nav||document.getElementById('nav-adv'))return;
+  var advTab=document.createElement('div');
+  advTab.id='nav-adv';advTab.className='tb-ni';advTab.innerHTML='💰 Advance';advTab.style.display='none';
+  advTab.onclick=function(){showView('adv');};
+  var actTab=document.createElement('div');
+  actTab.id='nav-act';actTab.className='tb-ni';actTab.innerHTML='📅 Activity';actTab.style.display='none';
+  actTab.onclick=function(){showView('act');};
+  nav.appendChild(advTab);nav.appendChild(actTab);
+}
+
+/* ── 6. INJECT NEW VIEW CONTAINERS ──────────────────── */
+function addViews(){
+  if(document.getElementById('view-adv'))return;
+  var ac=document.querySelector('.app-content');
+  if(!ac)return;
+  var advDiv=document.createElement('div');
+  advDiv.id='view-adv';advDiv.className='view';
+  advDiv.innerHTML='<div class="section-wrap">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">'
+    +'<div><div style="font-size:20px;font-weight:800">💰 Advance Received</div><div style="font-size:12px;color:var(--dim)">All converted leads — assigned executive & details</div></div>'
+    +'<div class="mf-row" id="advMFRow" style="margin:0">'
+    +'<button class="mf-pill on" onclick="setAdvFilt('all',this)">All Time</button>'
+    +'<button class="mf-pill" onclick="setAdvFilt('this',this)">This Month</button>'
+    +'<button class="mf-pill" onclick="setAdvFilt('last',this)">Last Month</button></div></div>'
+    +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px" id="advStats"></div>'
+    +'<div class="tm-scroll-hint">← Swipe to see more →</div>'
+    +'<div id="advList"></div></div>';
+  var actDiv=document.createElement('div');
+  actDiv.id='view-act';actDiv.className='view';
+  actDiv.innerHTML='<div class="section-wrap">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">'
+    +'<div><div style="font-size:20px;font-weight:800">📅 Activity Log</div><div style="font-size:12px;color:var(--dim)">All pipeline actions — today & history</div></div>'
+    +'<div class="mf-row" id="actMFRow" style="margin:0">'
+    +'<button class="mf-pill on" onclick="setActFilt('today',this)">Today</button>'
+    +'<button class="mf-pill" onclick="setActFilt('week',this)">This Week</button>'
+    +'<button class="mf-pill" onclick="setActFilt('all',this)">All Time</button></div></div>'
+    +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px" id="actStats"></div>'
+    +'<div class="dcard"><div class="dcard-hdr"><div class="dcard-title">Activity <span>Feed</span></div><div id="actCnt" class="dcard-badge" style="background:var(--blue-bg);color:var(--blue)">0</div></div><div id="actList" style="max-height:520px;overflow-y:auto"></div></div>'
+    +'</div>';
+  ac.appendChild(advDiv);
+  ac.appendChild(actDiv);
+}
+
+/* ── 7. ADVANCE VIEW BUILD ───────────────────────────── */
+var advFilt='all';
+window.setAdvFilt=function(v,btn){
+  advFilt=v;
+  document.querySelectorAll('#advMFRow .mf-pill').forEach(function(b){b.classList.remove('on');});
+  if(btn)btn.classList.add('on');
+  window.buildAdvView();
+};
+window.buildAdvView=function(){
+  if(!window.leads){return;}
+  var all=window.leads.filter(function(l){return l.pipeline&&l.pipeline.stage==='advance';});
+  var filt=filterByMonth(all,advFilt);
+  var tAdv=0,tRev=0;
+  filt.forEach(function(l){
+    var p=l.pipeline.advance;
+    var a=parseFloat(String(p.amount||'0').replace(/[^0-9.]/g,''));
+    var r=parseFloat(String(p.revenue||'0').replace(/[^0-9.]/g,''));
+    if(!isNaN(a))tAdv+=a;if(!isNaN(r))tRev+=r;
+  });
+  var byE={};filt.forEach(function(l){var e=l.exec||'?';byE[e]=(byE[e]||0)+1;});
+  var topE=Object.entries(byE).sort(function(a,b){return b[1]-a[1];})[0];
+  var fmtM=window.fmtMoney||function(v){return '₹'+v;};
+  var esc=window.escHtml||function(t){return t||'';};
+  var ini2=window.ini||function(n){return (n||'?')[0].toUpperCase();};
+  var avC2=window.avC||function(){return '#2563EB';};
+  var fmtD=window.fmtDate||function(d){return d||'—';};
+  var statsEl=document.getElementById('advStats');
+  if(statsEl){statsEl.innerHTML=[
+    {c:'mc-green',l:'Converted',v:filt.length,s:'Orders'},
+    {c:'mc-gold',l:'Advance Rcvd',v:fmtM(tAdv),s:'Amount'},
+    {c:'mc-blue',l:'Order Value',v:fmtM(tRev),s:'Total revenue'},
+    {c:'mc-purple',l:'Top BDM',v:topE?topE[0]:'—',s:topE?topE[1]+' orders':''}
+  ].map(function(x){return'<div class="mis-card '+x.c+'"><div class="mis-lbl">'+x.l+'</div><div class="mis-val" style="font-size:22px">'+x.v+'</div><div class="mis-sub">'+x.s+'</div></div>';}).join('');}
+  var listEl=document.getElementById('advList');
+  if(!listEl)return;
+  if(!filt.length){listEl.innerHTML='<div style="text-align:center;padding:60px;color:var(--dim)">No converted leads in this period</div>';return;}
+  var sorted=filt.slice().sort(function(a,b){var da=(a.pipeline.advance.date||a.date||''),db=(b.pipeline.advance.date||b.date||'');return db>da?1:-1;});
+  listEl.innerHTML=sorted.map(function(l){
+    var p=l.pipeline.advance,col=avC2(l.exec||l.name);
+    return '<div class="av-card">'
+      +'<div class="av-hdr">'
+      +'<div style="display:flex;align-items:center;gap:10px">'
+      +'<div style="width:36px;height:36px;border-radius:9px;background:'+col+'20;color:'+col+';display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">'+ini2(l.exec||l.name)+'</div>'
+      +'<div><div style="font-size:14px;font-weight:700">'+esc(l.name)+'</div>'
+      +'<div style="font-size:11px;color:var(--dim)">'+l.phone+' · '+esc(l.req||'—')+'</div></div></div>'
+      +'<div style="text-align:right;flex-shrink:0"><div style="font-size:14px;font-weight:800;color:var(--green)">'+(p.amount?fmtM(p.amount):'—')+'</div><div style="font-size:10px;color:var(--dim)">Advance</div></div></div>'
+      +'<div class="av-body">'
+      +'<div class="av-f"><div class="av-fl">Assigned To</div><div class="av-fv" style="color:'+col+'">'+esc(l.exec||'—')+'</div></div>'
+      +'<div class="av-f"><div class="av-fl">Lead Date</div><div class="av-fv">'+fmtD(l.date)+'</div></div>'
+      +'<div class="av-f"><div class="av-fl">Advance Date</div><div class="av-fv" style="color:var(--green)">'+fmtD(p.date||l.date)+'</div></div>'
+      +'<div class="av-f"><div class="av-fl">Order Value</div><div class="av-fv" style="color:var(--gold)">'+(p.revenue?fmtM(p.revenue):'—')+'</div></div>'
+      +'<div class="av-f"><div class="av-fl">Source</div><div class="av-fv">'+esc(l.src||'—')+'</div></div>'
+      +'<div class="av-f"><div class="av-fl">Location</div><div class="av-fv">'+esc(l.loc||'—')+'</div></div>'
+      +'<div class="av-f"><div class="av-fl">Budget</div><div class="av-fv">'+esc(l.budget||'—')+'</div></div>'
+      +'<div class="av-f" style="cursor:pointer" onclick="openPipeline(''+l.id+'')">'
+      +'<div class="av-fl">Pipeline</div><div class="av-fv" style="color:var(--blue);font-size:11px">View →</div></div>'
+      +'</div></div>';
+  }).join('');
+};
+
+/* ── 8. ACTIVITY LOG BUILD ───────────────────────────── */
+var actFiltV='today';
+window.setActFilt=function(v,btn){
+  actFiltV=v;
+  document.querySelectorAll('#actMFRow .mf-pill').forEach(function(b){b.classList.remove('on');});
+  if(btn)btn.classList.add('on');
+  window.buildActView();
+};
+window.buildActView=function(){
+  if(!window.leads)return;
+  var td=new Date().toISOString().split('T')[0];
+  var wk=new Date();wk.setDate(wk.getDate()-7);var wkStr=wk.toISOString().split('T')[0];
+  var acts=[];
+  var fmtD2=window.fmtDate||function(d){return d||'—';};
+  var esc2=window.escHtml||function(t){return t||'';};
+  window.leads.forEach(function(l){
+    var p=l.pipeline;if(!p)return;
+    function check(d,type,col){
+      if(!d)return;
+      var ok=actFiltV==='today'?d===td:actFiltV==='week'?d>=wkStr:true;
+      if(ok)acts.push({d:d,name:l.name,exec:l.exec||'—',type:type,col:col,id:l.id});
+    }
+    if(p.fu1&&p.fu1.actual)check(p.fu1.actual,'FU1 Completed','var(--blue)');
+    if(p.fu2&&p.fu2.actual)check(p.fu2.actual,'FU2 Completed','var(--purple)');
+    if(p.fu3&&p.fu3.actual)check(p.fu3.actual,'FU3 Completed','var(--orange)');
+    if(p.meeting&&p.meeting.actual)check(p.meeting.actual,'Meeting Done','var(--gold)');
+    if(p.quotation&&p.quotation.sentDate)check(p.quotation.sentDate,'Quotation Sent','var(--cyan)');
+    if(p.advance&&p.advance.date)check(p.advance.date,'✅ CONVERTED','var(--green)');
+    if(p.lostDate)check(p.lostDate,'❌ Lost','var(--red)');
+  });
+  acts.sort(function(a,b){return b.d>a.d?1:-1;});
+  var byE={};acts.forEach(function(a){byE[a.exec]=(byE[a.exec]||0)+1;});
+  var topE=Object.entries(byE).sort(function(a,b){return b[1]-a[1];})[0];
+  var conv=acts.filter(function(a){return a.type.indexOf('CONV')>-1;});
+  var statsEl=document.getElementById('actStats');
+  if(statsEl){statsEl.innerHTML=[
+    {c:'mc-blue',l:'Total Actions',v:acts.length,s:actFiltV==='today'?'Today':actFiltV==='week'?'This Week':'All'},
+    {c:'mc-green',l:'Conversions',v:conv.length,s:'Advance rcvd'},
+    {c:'mc-orange',l:'Active BDMs',v:Object.keys(byE).length,s:'Took action'},
+    {c:'mc-purple',l:'Top Performer',v:topE?topE[0]:'—',s:topE?topE[1]+' actions':''}
+  ].map(function(x){return'<div class="mis-card '+x.c+'"><div class="mis-lbl">'+x.l+'</div><div class="mis-val" style="font-size:22px">'+x.v+'</div><div class="mis-sub">'+x.s+'</div></div>';}).join('');}
+  var cntEl=document.getElementById('actCnt');if(cntEl)cntEl.textContent=acts.length+' entries';
+  var listEl=document.getElementById('actList');if(!listEl)return;
+  if(!acts.length){listEl.innerHTML='<div style="text-align:center;padding:40px;color:var(--dim)">No activity found</div>';return;}
+  listEl.innerHTML=acts.map(function(a){
+    return '<div class="act-row">'
+      +'<div class="act-dot" style="background:'+a.col+'"></div>'
+      +'<div class="act-dt">'+fmtD2(a.d)+'</div>'
+      +'<div style="flex:1"><div style="font-size:12px;font-weight:600">'+esc2(a.name)+'</div>'
+      +'<div style="font-size:10px;color:var(--dim);margin-top:1px">'+a.type+' · 👤 '+esc2(a.exec)+'</div></div>'
+      +'<button onclick="openPipeline(''+a.id+'')" style="padding:4px 10px;background:var(--blue-bg);color:var(--blue);border:none;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap">View</button>'
+      +'</div>';
+  }).join('');
+};
+
+/* ── 9. PATCH enterApp to show new tabs ──────────────── */
+var _origEnterApp=window.enterApp;
+window.enterApp=function(){
+  _origEnterApp&&_origEnterApp();
+  var role=window.currentRole;
+  var advT=document.getElementById('nav-adv'),actT=document.getElementById('nav-act');
+  if(advT)advT.style.display='flex';
+  if(actT)actT.style.display='flex';
+  var ma=document.getElementById('mn-adv');if(ma)ma.style.display='';
+};
+
+/* ── 10. PATCH showView for new views ────────────────── */
+var _origShowView=window.showView;
+window.showView=function(v){
+  _origShowView&&_origShowView(v);
+  var na=document.getElementById('nav-adv'),nc=document.getElementById('nav-act');
+  if(na)na.classList.remove('active');
+  if(nc)nc.classList.remove('active');
+  if(v==='adv'){if(na)na.classList.add('active');window.buildAdvView&&window.buildAdvView();}
+  if(v==='act'){if(nc)nc.classList.add('active');window.buildActView&&window.buildActView();}
+  var mna=document.getElementById('mn-adv'),mnc=document.getElementById('mn-act');
+  if(mna)mna.classList.remove('active');
+  if(v==='adv'&&mna)mna.classList.add('active');
+};
+
+/* ── 11. PATCH buildAll ──────────────────────────────── */
+var _origBA=window.buildAll;
+window.buildAll=function(){
+  _origBA&&_origBA();
+  window.buildAdvView&&window.buildAdvView();
+  window.buildActView&&window.buildActView();
+};
+
+/* ── 12. ADD MOBILE BOTTOM NAV ITEM ──────────────────── */
+function addMobNavItem(){
+  var mn=document.getElementById('mobNav');
+  if(!mn||document.getElementById('mn-adv'))return;
+  var btn=document.createElement('button');
+  btn.className='mob-nav-item';btn.id='mn-adv';btn.style.display='none';
+  btn.innerHTML='<span class="mob-nav-icon">💰</span><span>Advance</span>';
+  btn.onclick=function(){
+    document.querySelectorAll('.mob-nav-item').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');window.showView('adv');
+  };
+  var addBtn=document.getElementById('mn-add');
+  if(addBtn)mn.insertBefore(btn,addBtn);else mn.appendChild(btn);
+}
+
+/* ── INIT ────────────────────────────────────────────── */
+function init(){
+  patchTopbar();
+  addScrollHints();
+  injectMonthFilter();
+  addNavTabs();
+  addViews();
+  addMobNavItem();
+}
+
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
+else setTimeout(init,100);
+window.addEventListener('resize',function(){
+  var tb=document.querySelector('.topbar');if(tb)delete tb.dataset.fixed;
+  patchTopbar();
+});
+
+})();
+</script>
 </body>
 </html>
