@@ -360,6 +360,125 @@ td{padding:10px 12px;vertical-align:middle}
   .tb-pill.role{display:none}
 }
 </style>
+  <!-- 
+  ════════════════════════════════════════════════════
+  ASTORIA LEAD FMS — MOBILE TOP NAV FIX
+  
+  SIRF YE POORA BLOCK apni HTML file mein paste karo
+  </head> se BILKUL PEHLE
+  ════════════════════════════════════════════════════
+-->
+<style>
+/* ── Mobile: Top navigation tabs fix ── */
+@media(max-width:768px){
+
+  /* Topbar stacks: brand row upar, nav tabs neeche */
+  .topbar{
+    padding:0 !important;
+    height:auto !important;
+    flex-direction:column !important;
+    align-items:stretch !important;
+  }
+
+  /* Nav tabs — horizontal scrollable strip */
+  .tb-nav{
+    display:flex !important;
+    overflow-x:auto !important;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    height:auto !important;
+    padding:0 !important;
+    background:rgba(0,0,0,.22);
+    width:100%;
+    flex-shrink:0;
+    border-top:1px solid rgba(255,255,255,.09);
+  }
+  .tb-nav::-webkit-scrollbar{ display:none; }
+
+  /* Tab items */
+  .tb-ni{
+    white-space:nowrap !important;
+    padding:9px 16px !important;
+    font-size:11px !important;
+    height:auto !important;
+    flex-shrink:0 !important;
+    border-bottom:none !important;
+    border-top:2px solid transparent !important;
+    display:flex;
+    align-items:center;
+    gap:4px;
+  }
+  .tb-ni:hover{ background:rgba(255,255,255,.07); }
+  .tb-ni.active{
+    color:#fff !important;
+    border-top-color:#C8930A !important;
+    background:rgba(255,255,255,.07);
+  }
+
+  /* Logout button show karo mobile pe */
+  .logout-btn{
+    display:inline-flex !important;
+    font-size:10px !important;
+    padding:5px 8px !important;
+  }
+
+  /* Bottom nav ke liye content padding */
+  .app-content{ padding-bottom:66px !important; }
+}
+</style>
+<script>
+/* Topbar restructure: brand+buttons ek line mein, nav tabs neeche */
+;(function(){
+  function fixTopbar(){
+    var tb = document.querySelector('.topbar');
+    if(!tb || tb.getAttribute('data-mob-fixed')) return;
+    if(window.innerWidth > 768) return;
+    
+    tb.setAttribute('data-mob-fixed','1');
+    
+    var brand = tb.querySelector('.tb-brand');
+    var nav   = tb.querySelector('.tb-nav');
+    var right = tb.querySelector('.tb-right');
+    
+    if(!brand || !nav || !right) return;
+    
+    /* Create brand+right row */
+    var row = document.createElement('div');
+    row.style.cssText = [
+      'display:flex',
+      'align-items:center',
+      'justify-content:space-between',
+      'padding:0 12px',
+      'height:48px',
+      'flex-shrink:0',
+      'width:100%'
+    ].join(';');
+    
+    /* Move brand and right buttons into the row */
+    row.appendChild(brand);
+    row.appendChild(right);
+    
+    /* Insert row before nav tabs */
+    tb.insertBefore(row, nav);
+    
+    console.log('✓ Astoria FMS: Mobile header fixed');
+  }
+  
+  /* Run on load */
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', fixTopbar);
+  } else {
+    setTimeout(fixTopbar, 50);
+  }
+  
+  /* Re-run on resize */
+  window.addEventListener('resize', function(){
+    var tb = document.querySelector('.topbar');
+    if(tb) tb.removeAttribute('data-mob-fixed');
+    fixTopbar();
+  });
+})();
+</script>
 </head>
 <body>
 
