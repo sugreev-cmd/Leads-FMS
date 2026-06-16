@@ -841,7 +841,6 @@ window.onload=function(){
   if(saved&&PASSWORDS[saved]){currentRole=saved;enterApp();}
 };
 </script>
-  <!-- ═══════════════════════════════════════════════════════
      ASTORIA FMS v2 — COMPLETE OVERRIDE
      Paste this entire block before </body> in your HTML
      ═══════════════════════════════════════════════════════ -->
@@ -937,10 +936,10 @@ function injectMonthFilter(){
   var row=document.createElement('div');
   row.id='dashMFRow';row.className='mf-row';
   row.innerHTML='<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dim)">Period:</span>'
-    +'<button class="mf-pill on" onclick="setDashMonth('all',this)">All Time</button>'
-    +'<button class="mf-pill" onclick="setDashMonth('this',this)">This Month</button>'
-    +'<button class="mf-pill" onclick="setDashMonth('last',this)">Last Month</button>'
-    +'<button class="mf-pill" onclick="setDashMonth('q',this)">This Quarter</button>';
+    +'<button class="mf-pill on" onclick="setDashMonth(\'all\',this)">All Time</button>'
+    +'<button class="mf-pill" onclick="setDashMonth(\'this\',this)">This Month</button>'
+    +'<button class="mf-pill" onclick="setDashMonth(\'last\',this)">Last Month</button>'
+    +'<button class="mf-pill" onclick="setDashMonth(\'q\',this)">This Quarter</button>';
   kg.parentNode.insertBefore(row,kg);
 }
 
@@ -981,9 +980,9 @@ function addViews(){
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">'
     +'<div><div style="font-size:20px;font-weight:800">💰 Advance Received</div><div style="font-size:12px;color:var(--dim)">All converted leads — assigned executive & details</div></div>'
     +'<div class="mf-row" id="advMFRow" style="margin:0">'
-    +'<button class="mf-pill on" onclick="setAdvFilt('all',this)">All Time</button>'
-    +'<button class="mf-pill" onclick="setAdvFilt('this',this)">This Month</button>'
-    +'<button class="mf-pill" onclick="setAdvFilt('last',this)">Last Month</button></div></div>'
+    +'<button class="mf-pill on" onclick="setAdvFilt(\'all\',this)">All Time</button>'
+    +'<button class="mf-pill" onclick="setAdvFilt(\'this\',this)">This Month</button>'
+    +'<button class="mf-pill" onclick="setAdvFilt(\'last\',this)">Last Month</button></div></div>'
     +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px" id="advStats"></div>'
     +'<div class="tm-scroll-hint">← Swipe to see more →</div>'
     +'<div id="advList"></div></div>';
@@ -993,9 +992,9 @@ function addViews(){
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">'
     +'<div><div style="font-size:20px;font-weight:800">📅 Activity Log</div><div style="font-size:12px;color:var(--dim)">All pipeline actions — today & history</div></div>'
     +'<div class="mf-row" id="actMFRow" style="margin:0">'
-    +'<button class="mf-pill on" onclick="setActFilt('today',this)">Today</button>'
-    +'<button class="mf-pill" onclick="setActFilt('week',this)">This Week</button>'
-    +'<button class="mf-pill" onclick="setActFilt('all',this)">All Time</button></div></div>'
+    +'<button class="mf-pill on" onclick="setActFilt(\'today\',this)">Today</button>'
+    +'<button class="mf-pill" onclick="setActFilt(\'week\',this)">This Week</button>'
+    +'<button class="mf-pill" onclick="setActFilt(\'all\',this)">All Time</button></div></div>'
     +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px" id="actStats"></div>'
     +'<div class="dcard"><div class="dcard-hdr"><div class="dcard-title">Activity <span>Feed</span></div><div id="actCnt" class="dcard-badge" style="background:var(--blue-bg);color:var(--blue)">0</div></div><div id="actList" style="max-height:520px;overflow-y:auto"></div></div>'
     +'</div>';
@@ -1185,328 +1184,120 @@ window.addEventListener('resize',function(){
 
 })();
 </script>
-  <!--
-═══════════════════════════════════════════════════════════════
-  ASTORIA FMS — ENHANCED ACTIVITY LOG PATCH
-  
-  Kya karna hai:
-  1. Is poore block ko apni HTML file mein </body> se PEHLE paste karo
-  2. Pehle wala Activity Log override ho jaayega
-  3. Baaki kuch bhi change nahi hoga
-═══════════════════════════════════════════════════════════════
--->
 
+<!-- ═══════════════════════════════════════════════════════
+     ASTORIA FMS — ACTIVITY LOG (FIXED & CLEAN)
+     ═══════════════════════════════════════════════════════ -->
 <style>
-/* ── ACTIVITY LOG ENHANCED STYLES ── */
-.act-filter-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
-  padding: 12px 16px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-}
-.act-filter-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--dim);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.act-date-inp {
-  padding: 7px 11px;
-  background: var(--bg);
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  font-size: 12px;
-  font-family: 'Outfit', sans-serif;
-  outline: none;
-  cursor: pointer;
-  transition: border-color .2s;
-}
-.act-date-inp:focus { border-color: var(--blue); }
-.act-exec-select {
-  padding: 7px 11px;
-  background: var(--bg);
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  font-size: 12px;
-  font-family: 'Outfit', sans-serif;
-  outline: none;
-  min-width: 150px;
-  cursor: pointer;
-  transition: border-color .2s;
-}
-.act-exec-select:focus { border-color: var(--blue); }
-.act-clear-btn {
-  padding: 7px 13px;
-  background: var(--red-bg);
-  border: 1.5px solid rgba(220,38,38,.25);
-  border-radius: 8px;
-  color: var(--red);
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: 'Outfit', sans-serif;
-  transition: all .2s;
-  white-space: nowrap;
-}
-.act-clear-btn:hover { background: var(--red); color: #fff; }
-.act-period-pills {
-  display: flex;
-  gap: 5px;
-  flex-wrap: wrap;
-}
-.act-period-pill {
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
-  border: 1.5px solid var(--border);
-  background: var(--surface);
-  color: var(--sub);
-  cursor: pointer;
-  transition: all .18s;
-  font-family: 'Outfit', sans-serif;
-}
-.act-period-pill:hover { border-color: var(--blue); color: var(--blue); }
-.act-period-pill.on { background: var(--nav); border-color: var(--nav); color: #fff; }
-
-/* Each activity row */
-.act-row-v2 {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 11px 16px;
-  border-bottom: 1px solid var(--border);
-  transition: background .12s;
-  cursor: pointer;
-}
-.act-row-v2:hover { background: var(--bg); }
-.act-row-v2:last-child { border-bottom: none; }
-.act-left-strip {
-  width: 4px;
-  height: 36px;
-  border-radius: 3px;
-  flex-shrink: 0;
-}
-.act-exec-av {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-.act-info { flex: 1; min-width: 0; }
-.act-lead-name {
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-bottom: 2px;
-}
-.act-meta {
-  font-size: 10px;
-  color: var(--dim);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-.act-type-badge {
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 10px;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-.act-date-col {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--sub);
-  min-width: 64px;
-  text-align: right;
-  flex-shrink: 0;
-}
-.act-view-btn {
-  padding: 4px 10px;
-  background: var(--blue-bg);
-  color: var(--blue);
-  border: none;
-  border-radius: 6px;
-  font-size: 10px;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  font-family: 'Outfit', sans-serif;
-  flex-shrink: 0;
-}
-.act-view-btn:hover { background: var(--blue); color: #fff; }
-
-/* Group header (date group) */
-.act-group-hdr {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 16px;
-  background: #F8FAFF;
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 2;
-}
-.act-group-date {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
-  color: var(--sub);
-}
-.act-group-count {
-  padding: 2px 8px;
-  background: var(--blue-bg);
-  color: var(--blue);
-  border-radius: 10px;
-  font-size: 10px;
-  font-weight: 700;
-}
-
-/* Empty state */
-.act-empty {
-  text-align: center;
-  padding: 50px 20px;
-}
-.act-empty-icon { font-size: 40px; opacity: .25; margin-bottom: 12px; }
-.act-empty-title { font-size: 15px; font-weight: 700; color: var(--sub); margin-bottom: 4px; }
-.act-empty-sub { font-size: 11px; color: var(--dim); }
-
-@media(max-width:768px) {
-  .act-filter-bar { gap: 6px; padding: 10px 12px; }
-  .act-exec-select { min-width: 120px; }
-  .act-date-col { display: none; }
-}
+.act-filter-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:11px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:10px}
+.act-filter-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dim);white-space:nowrap;flex-shrink:0}
+.act-ppills{display:flex;gap:5px;flex-wrap:wrap}
+.act-pp{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;border:1.5px solid var(--border);background:var(--surface);color:var(--sub);cursor:pointer;transition:all .18s;font-family:'Outfit',sans-serif}
+.act-pp:hover{border-color:var(--blue);color:var(--blue)}.act-pp.on{background:var(--nav);border-color:var(--nav);color:#fff}
+.act-esel{padding:7px 11px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-family:'Outfit',sans-serif;outline:none;min-width:140px;cursor:pointer}
+.act-esel:focus{border-color:var(--blue)}
+.act-clr{padding:7px 13px;background:var(--red-bg);border:1.5px solid rgba(220,38,38,.25);border-radius:8px;color:var(--red);font-size:11px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;white-space:nowrap}
+.act-clr:hover{background:var(--red);color:#fff}
+.act-crange{display:none;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px;background:var(--orange-bg);border:1px solid rgba(217,119,6,.2);border-radius:10px;margin-bottom:10px}
+.act-di{padding:7px 11px;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-family:'Outfit',sans-serif;outline:none;cursor:pointer}
+.act-di:focus{border-color:var(--blue)}
+.act-grp-hdr{display:flex;align-items:center;gap:8px;padding:7px 14px;background:#F8FAFF;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:2}
+.act-grp-dt{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--sub)}
+.act-grp-ct{padding:2px 8px;background:var(--blue-bg);color:var(--blue);border-radius:10px;font-size:10px;font-weight:700}
+.act-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);transition:background .12s;cursor:pointer}
+.act-row:hover{background:var(--bg)}.act-row:last-child{border-bottom:none}
+.act-strip{width:3px;height:34px;border-radius:2px;flex-shrink:0}
+.act-av{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.act-info{flex:1;min-width:0}
+.act-lname{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+.act-meta{font-size:10px;color:var(--dim);display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.act-badge{padding:3px 9px;border-radius:10px;font-size:10px;font-weight:600;white-space:nowrap;flex-shrink:0}
+.act-dcol{font-size:11px;font-weight:600;color:var(--sub);min-width:58px;text-align:right;flex-shrink:0}
+.act-vbtn{padding:4px 10px;background:var(--blue-bg);color:var(--blue);border:none;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'Outfit',sans-serif;flex-shrink:0}
+.act-vbtn:hover{background:var(--blue);color:#fff}
+.act-empty{text-align:center;padding:50px 20px}
+.act-empty-icon{font-size:40px;opacity:.25;margin-bottom:12px}
+.act-empty-t{font-size:15px;font-weight:700;color:var(--sub);margin-bottom:4px}
+.act-empty-s{font-size:11px;color:var(--dim)}
+@media(max-width:768px){.act-dcol{display:none}.act-filter-bar{gap:6px;padding:9px 10px}}
 </style>
 
 <script>
 (function(){
 'use strict';
 
-/* ─── ACTIVITY TYPES CONFIG ─────────────────────────── */
-var ACT_TYPES = [
-  { key:'fu1',    label:'FU 1 Done',       emoji:'📞', color:'var(--blue)',   bg:'var(--blue-bg)'   },
-  { key:'fu2',    label:'FU 2 Done',       emoji:'📲', color:'var(--purple)', bg:'var(--purple-bg)' },
-  { key:'fu3',    label:'FU 3 Done',       emoji:'🔔', color:'var(--orange)', bg:'var(--orange-bg)' },
-  { key:'meet',   label:'Meeting Done',    emoji:'🤝', color:'var(--gold)',   bg:'var(--gold-bg)'   },
-  { key:'quot',   label:'Quotation Sent',  emoji:'📄', color:'var(--cyan)',   bg:'var(--cyan-bg)'   },
-  { key:'conv',   label:'Converted ✅',    emoji:'💰', color:'var(--green)',  bg:'var(--green-bg)'  },
-  { key:'lost',   label:'Marked Lost',     emoji:'❌', color:'var(--red)',    bg:'var(--red-bg)'    }
+/* ── CONFIG ── */
+var ATYPES = [
+  {key:'fu1',  label:'FU 1 Done',      emoji:'📞', color:'var(--blue)',   bg:'var(--blue-bg)'},
+  {key:'fu2',  label:'FU 2 Done',      emoji:'📲', color:'var(--purple)', bg:'var(--purple-bg)'},
+  {key:'fu3',  label:'FU 3 Done',      emoji:'🔔', color:'var(--orange)', bg:'var(--orange-bg)'},
+  {key:'meet', label:'Meeting Done',   emoji:'🤝', color:'var(--gold)',   bg:'var(--gold-bg)'},
+  {key:'quot', label:'Quotation Sent', emoji:'📄', color:'var(--cyan)',   bg:'var(--cyan-bg)'},
+  {key:'conv', label:'Converted ✅',   emoji:'💰', color:'var(--green)',  bg:'var(--green-bg)'},
+  {key:'lost', label:'Marked Lost',    emoji:'❌', color:'var(--red)',    bg:'var(--red-bg)'}
 ];
+function getAT(k){return ATYPES.find(function(t){return t.key===k;})||ATYPES[0];}
 
-function getTypeConf(key) {
-  return ACT_TYPES.find(function(t){ return t.key === key; }) || ACT_TYPES[0];
-}
+/* ── STATE ── */
+var AS={period:'today',dateFrom:'',dateTo:'',exec:''};
 
-/* ─── STATE ─────────────────────────────────────────── */
-var actState = {
-  period: 'today',   // today | week | all | custom
-  dateFrom: '',
-  dateTo: '',
-  exec: ''
-};
-
-/* ─── EXTRACT ACTIVITIES FROM LEADS ─────────────────── */
-function extractActivities(leadsArr) {
-  var acts = [];
-  var fmtD = window.fmtDate || function(d){ return d || '—'; };
-
-  leadsArr.forEach(function(l) {
-    var p = l.pipeline; if (!p) return;
-
-    function push(d, key, extraLabel) {
-      if (!d) return;
-      acts.push({
-        date:   d,
-        key:    key,
-        label:  extraLabel || getTypeConf(key).label,
-        name:   l.name   || '—',
-        phone:  l.phone  || '—',
-        req:    l.req    || '—',
-        exec:   l.exec   || 'Unassigned',
-        src:    l.src    || '—',
-        id:     l.id
-      });
+/* ── EXTRACT ── */
+function extractActs(leadsArr){
+  var acts=[];
+  leadsArr.forEach(function(l){
+    var p=l.pipeline;if(!p)return;
+    function push(d,key){
+      if(!d)return;
+      acts.push({date:d,key:key,name:l.name||'—',phone:l.phone||'—',req:l.req||'—',exec:l.exec||'Unassigned',src:l.src||'—',id:l.id});
     }
-
-    if (p.fu1 && p.fu1.actual)             push(p.fu1.actual,  'fu1');
-    if (p.fu2 && p.fu2.actual)             push(p.fu2.actual,  'fu2');
-    if (p.fu3 && p.fu3.actual)             push(p.fu3.actual,  'fu3');
-    if (p.meeting && p.meeting.actual)     push(p.meeting.actual, 'meet');
-    if (p.quotation && p.quotation.sentDate) push(p.quotation.sentDate, 'quot');
-    if (p.advance && p.advance.date)       push(p.advance.date, 'conv');
-    if (p.lostDate)                        push(p.lostDate,    'lost');
+    if(p.fu1&&p.fu1.actual)     push(p.fu1.actual,'fu1');
+    if(p.fu2&&p.fu2.actual)     push(p.fu2.actual,'fu2');
+    if(p.fu3&&p.fu3.actual)     push(p.fu3.actual,'fu3');
+    if(p.meeting&&p.meeting.actual) push(p.meeting.actual,'meet');
+    if(p.quotation&&p.quotation.sentDate) push(p.quotation.sentDate,'quot');
+    if(p.advance&&p.advance.date) push(p.advance.date,'conv');
+    if(p.lostDate)              push(p.lostDate,'lost');
   });
-
   return acts;
 }
 
-/* ─── FILTER ACTIVITIES ─────────────────────────────── */
-function filterActivities(acts) {
-  var td  = new Date().toISOString().split('T')[0];
-  var wk  = new Date(); wk.setDate(wk.getDate() - 7);
-  var wkS = wk.toISOString().split('T')[0];
-
-  return acts.filter(function(a) {
-    // Period filter
-    if (actState.period === 'today'  && a.date !== td)    return false;
-    if (actState.period === 'week'   && a.date < wkS)     return false;
-    if (actState.period === 'custom') {
-      if (actState.dateFrom && a.date < actState.dateFrom) return false;
-      if (actState.dateTo   && a.date > actState.dateTo)   return false;
+/* ── FILTER ── */
+function filterActs(acts){
+  var td=new Date().toISOString().split('T')[0];
+  var wk=new Date();wk.setDate(wk.getDate()-7);var wkS=wk.toISOString().split('T')[0];
+  return acts.filter(function(a){
+    if(AS.period==='today' && a.date!==td) return false;
+    if(AS.period==='week'  && a.date<wkS)  return false;
+    if(AS.period==='custom'){
+      if(AS.dateFrom && a.date<AS.dateFrom) return false;
+      if(AS.dateTo   && a.date>AS.dateTo)   return false;
     }
-    // Exec filter
-    if (actState.exec && a.exec !== actState.exec) return false;
+    if(AS.exec && a.exec!==AS.exec) return false;
     return true;
   });
 }
 
-/* ─── POPULATE EXEC DROPDOWN ─────────────────────────── */
-function populateExecDrop() {
-  var sel = document.getElementById('actExecFilter'); if (!sel) return;
-  var execs = [];
-  if (window.leads) {
-    execs = Array.from(new Set(window.leads.map(function(l){ return l.exec || 'Unassigned'; }))).sort();
-  }
-  var cur = sel.value;
-  sel.innerHTML = '<option value="">All Executives</option>';
-  execs.forEach(function(e) {
-    sel.innerHTML += '<option value="' + e + '"' + (e === cur ? ' selected' : '') + '>' + e + '</option>';
-  });
+/* ── POPULATE EXEC DROPDOWN ── */
+function fillExecDrop(){
+  var sel=document.getElementById('actExecSel');if(!sel||!window.leads)return;
+  var cur=sel.value;
+  var execs=Array.from(new Set(window.leads.map(function(l){return l.exec||'Unassigned';}))).sort();
+  sel.innerHTML='<option value="">All Executives</option>';
+  execs.forEach(function(e){sel.innerHTML+='<option value="'+e+'"'+(e===cur?' selected':'')+'>'+e+'</option>';});
 }
 
-/* ─── STATS ROW ─────────────────────────────────────── */
-function buildActStats(acts) {
-  var byE = {}; acts.forEach(function(a){ byE[a.exec] = (byE[a.exec]||0)+1; });
-  var topE = Object.entries(byE).sort(function(a,b){ return b[1]-a[1]; })[0];
-  var conv = acts.filter(function(a){ return a.key === 'conv'; }).length;
-  var lost = acts.filter(function(a){ return a.key === 'lost'; }).length;
-  var el = document.getElementById('actStats'); if (!el) return;
-  el.innerHTML = [
-    { c:'mc-blue',   l:'Total Actions',   v: acts.length,          s: 'Across all stages' },
-    { c:'mc-green',  l:'Conversions',     v: conv,                 s: 'Advance received'  },
-    { c:'mc-red',    l:'Leads Lost',      v: lost,                 s: 'Marked lost'       },
-    { c:'mc-purple', l:'Top Executive',   v: topE ? topE[0] : '—', s: topE ? topE[1]+' actions' : 'No data' }
+/* ── STATS ── */
+function buildActStats(acts){
+  var el=document.getElementById('actStatsRow');if(!el)return;
+  var byE={};acts.forEach(function(a){byE[a.exec]=(byE[a.exec]||0)+1;});
+  var topE=Object.entries(byE).sort(function(a,b){return b[1]-a[1];})[0];
+  var conv=acts.filter(function(a){return a.key==='conv';}).length;
+  var lost=acts.filter(function(a){return a.key==='lost';}).length;
+  el.innerHTML=[
+    {c:'mc-blue',  l:'Total Actions', v:acts.length, s:'Sabhi stages'},
+    {c:'mc-green', l:'Conversions',   v:conv,        s:'Advance received'},
+    {c:'mc-red',   l:'Leads Lost',    v:lost,        s:'Marked lost'},
+    {c:'mc-purple',l:'Top Executive', v:topE?topE[0]:'—', s:topE?topE[1]+' actions':'No data'}
   ].map(function(x){
     return '<div class="mis-card '+x.c+'"><div class="mis-lbl">'+x.l+'</div>'
       +'<div class="mis-val" style="font-size:20px">'+x.v+'</div>'
@@ -1514,173 +1305,144 @@ function buildActStats(acts) {
   }).join('');
 }
 
-/* ─── MAIN BUILD ─────────────────────────────────────── */
-window.buildActView = function() {
-  if (!window.leads) return;
+/* ── MAIN BUILD ── */
+window.buildActView=function(){
+  if(!window.leads)return;
+  fillExecDrop();
+  var all=extractActs(window.leads);
+  var filt=filterActs(all);
+  filt.sort(function(a,b){return a.date>b.date?-1:1;});
 
-  populateExecDrop();
+  var cntEl=document.getElementById('actCnt');
+  if(cntEl)cntEl.textContent=filt.length+' entries';
 
-  var allActs  = extractActivities(window.leads);
-  var filtered = filterActivities(allActs);
+  buildActStats(filt);
 
-  // Sort newest first
-  filtered.sort(function(a, b){ return a.date > b.date ? -1 : 1; });
+  var listEl=document.getElementById('actList');if(!listEl)return;
 
-  // Update count badge
-  var cntEl = document.getElementById('actCnt');
-  if (cntEl) cntEl.textContent = filtered.length + ' entries';
-
-  buildActStats(filtered);
-
-  var listEl = document.getElementById('actList'); if (!listEl) return;
-
-  if (!filtered.length) {
-    listEl.innerHTML = '<div class="act-empty">'
-      +'<div class="act-empty-icon">📭</div>'
-      +'<div class="act-empty-title">Koi activity nahi mili</div>'
-      +'<div class="act-empty-sub">Filter change karo ya koi aur period select karo</div>'
-      +'</div>';
+  if(!filt.length){
+    listEl.innerHTML='<div class="act-empty"><div class="act-empty-icon">📭</div>'
+      +'<div class="act-empty-t">Koi activity nahi mili</div>'
+      +'<div class="act-empty-s">Filter change karo ya koi aur period select karo</div></div>';
     return;
   }
 
-  // Group by date
-  var groups = {};
-  var order  = [];
-  filtered.forEach(function(a) {
-    if (!groups[a.date]) { groups[a.date] = []; order.push(a.date); }
+  /* Group by date */
+  var groups={},order=[];
+  filt.forEach(function(a){
+    if(!groups[a.date]){groups[a.date]=[];order.push(a.date);}
     groups[a.date].push(a);
   });
 
-  var esc    = window.escHtml || function(t){ return t||''; };
-  var fmtD   = window.fmtDate || function(d){ return d||'—'; };
-  var avC2   = window.avC     || function(){ return '#2563EB'; };
-  var ini2   = window.ini     || function(n){ return (n||'?')[0].toUpperCase(); };
-  var td     = new Date().toISOString().split('T')[0];
-  var yday   = new Date(); yday.setDate(yday.getDate()-1);
-  var ydayS  = yday.toISOString().split('T')[0];
+  var esc=window.escHtml||function(t){return t||'';};
+  var fmtD=window.fmtDate||function(d){return d||'—';};
+  var avC2=window.avC||function(){return '#2563EB';};
+  var ini2=window.ini||function(n){return (n||'?')[0].toUpperCase();};
+  var td=new Date().toISOString().split('T')[0];
+  var yd=new Date();yd.setDate(yd.getDate()-1);var ydS=yd.toISOString().split('T')[0];
 
-  function dateLabel(d) {
-    if (d === td)    return 'Today';
-    if (d === ydayS) return 'Yesterday';
+  function dlabel(d){
+    if(d===td)return'Aaj';
+    if(d===ydS)return'Kal';
     return fmtD(d);
   }
 
-  var html = '';
-  order.forEach(function(date) {
-    var rows = groups[date];
-    html += '<div class="act-group-hdr">'
-      +'<div class="act-group-date">'+dateLabel(date)+'</div>'
-      +'<div class="act-group-count">'+rows.length+' actions</div>'
-      +'</div>';
-
-    rows.forEach(function(a) {
-      var tc   = getTypeConf(a.key);
-      var col  = avC2(a.exec);
-      html += '<div class="act-row-v2" onclick="openPipeline(\''+a.id+'\')" title="Pipeline kholo">'
-        +'<div class="act-left-strip" style="background:'+tc.color+'"></div>'
-        +'<div class="act-exec-av" style="background:'+col+'20;color:'+col+'">'+ini2(a.exec)+'</div>'
+  var html='';
+  order.forEach(function(date){
+    var rows=groups[date];
+    html+='<div class="act-grp-hdr"><div class="act-grp-dt">'+dlabel(date)+'</div>'
+      +'<div class="act-grp-ct">'+rows.length+' actions</div></div>';
+    rows.forEach(function(a){
+      var tc=getAT(a.key);
+      var col=avC2(a.exec);
+      html+='<div class="act-row" onclick="openPipeline(\''+a.id+'\')">'
+        +'<div class="act-strip" style="background:'+tc.color+'"></div>'
+        +'<div class="act-av" style="background:'+col+'20;color:'+col+'">'+ini2(a.exec)+'</div>'
         +'<div class="act-info">'
-          +'<div class="act-lead-name">'+esc(a.name)+'</div>'
+          +'<div class="act-lname">'+esc(a.name)+'</div>'
           +'<div class="act-meta">'
             +'<span style="color:'+col+';font-weight:600">'+esc(a.exec)+'</span>'
-            +'<span>·</span>'
+            +'<span style="opacity:.4">·</span>'
             +'<span>'+esc(a.req)+'</span>'
-            +'<span>·</span>'
+            +'<span style="opacity:.4">·</span>'
             +'<span>'+a.phone+'</span>'
-            +(a.src !== '—' ? '<span>· '+esc(a.src)+'</span>' : '')
+            +(a.src!=='—'?'<span style="opacity:.4">·</span><span>'+esc(a.src)+'</span>':'')
           +'</div>'
         +'</div>'
-        +'<span class="act-type-badge" style="background:'+tc.bg+';color:'+tc.color+'">'+tc.emoji+' '+tc.label+'</span>'
-        +'<div class="act-date-col">'+fmtD(a.date)+'</div>'
-        +'<button class="act-view-btn" onclick="event.stopPropagation();openPipeline(\''+a.id+'\')">View →</button>'
+        +'<span class="act-badge" style="background:'+tc.bg+';color:'+tc.color+'">'+tc.emoji+' '+tc.label+'</span>'
+        +'<div class="act-dcol">'+fmtD(a.date)+'</div>'
+        +'<button class="act-vbtn" onclick="event.stopPropagation();openPipeline(\''+a.id+'\')">View →</button>'
         +'</div>';
     });
   });
-
-  listEl.innerHTML = html;
+  listEl.innerHTML=html;
 };
 
-/* ─── FILTER CONTROLS ────────────────────────────────── */
-window.setActPeriod = function(v, btn) {
-  actState.period = v;
-  document.querySelectorAll('.act-period-pill').forEach(function(b){ b.classList.remove('on'); });
-  if (btn) btn.classList.add('on');
-
-  // Custom date range show/hide
-  var cdr = document.getElementById('actCustomRange');
-  if (cdr) cdr.style.display = (v === 'custom') ? 'flex' : 'none';
-
+/* ── FILTER CONTROLS ── */
+window.setActPeriod=function(v,btn){
+  AS.period=v;
+  document.querySelectorAll('.act-pp').forEach(function(b){b.classList.remove('on');});
+  if(btn)btn.classList.add('on');
+  var cr=document.getElementById('actCRange');
+  if(cr)cr.style.display=(v==='custom')?'flex':'none';
+  window.buildActView();
+};
+window.setActExec=function(v){AS.exec=v;window.buildActView();};
+window.applyActRange=function(){
+  var f=document.getElementById('actDF');var t=document.getElementById('actDT');
+  AS.dateFrom=f?f.value:'';AS.dateTo=t?t.value:'';
+  AS.period='custom';window.buildActView();
+};
+window.clearActFilters=function(){
+  AS={period:'today',dateFrom:'',dateTo:'',exec:''};
+  var f=document.getElementById('actDF');if(f)f.value='';
+  var t=document.getElementById('actDT');if(t)t.value='';
+  var s=document.getElementById('actExecSel');if(s)s.value='';
+  var cr=document.getElementById('actCRange');if(cr)cr.style.display='none';
+  document.querySelectorAll('.act-pp').forEach(function(b){b.classList.remove('on');});
+  var tp=document.querySelector('.act-pp[data-p="today"]');if(tp)tp.classList.add('on');
   window.buildActView();
 };
 
-window.setActExec = function(v) {
-  actState.exec = v;
-  window.buildActView();
-};
-
-window.setActDateRange = function() {
-  var f = document.getElementById('actDateFrom');
-  var t = document.getElementById('actDateTo');
-  actState.dateFrom = f ? f.value : '';
-  actState.dateTo   = t ? t.value : '';
-  actState.period   = 'custom';
-  window.buildActView();
-};
-
-window.clearActFilters = function() {
-  actState = { period:'today', dateFrom:'', dateTo:'', exec:'' };
-  var f = document.getElementById('actDateFrom'); if(f) f.value = '';
-  var t = document.getElementById('actDateTo');   if(t) t.value = '';
-  var s = document.getElementById('actExecFilter'); if(s) s.value = '';
-  var cdr = document.getElementById('actCustomRange'); if(cdr) cdr.style.display='none';
-  document.querySelectorAll('.act-period-pill').forEach(function(b){ b.classList.remove('on'); });
-  var tp = document.querySelector('.act-period-pill[data-period="today"]'); if(tp) tp.classList.add('on');
-  window.buildActView();
-};
-
-/* ─── REBUILD THE ACTIVITY VIEW HTML ─────────────────── */
-function rebuildActViewHTML() {
-  var el = document.getElementById('view-act'); if(!el) return;
-
-  el.innerHTML = '<div class="section-wrap">'
-    // Header
-    +'<div style="margin-bottom:14px">'
+/* ── REBUILD VIEW HTML ── */
+function rebuildViewAct(){
+  var el=document.getElementById('view-act');if(!el)return;
+  el.innerHTML=
+    '<div class="section-wrap">'
+    +'<div style="margin-bottom:12px">'
       +'<div style="font-size:20px;font-weight:800">📅 Activity Log</div>'
-      +'<div style="font-size:12px;color:var(--dim)">Kaun se doer ne kaunse lead par kab kaam kiya</div>'
+      +'<div style="font-size:12px;color:var(--dim)">Kaun se executive ne kaunse lead par kab kaam kiya</div>'
     +'</div>'
 
-    // Filter bar
+    /* Filter Bar */
     +'<div class="act-filter-bar">'
-      // Period pills
-      +'<div class="act-filter-label">Period</div>'
-      +'<div class="act-period-pills">'
-        +'<button class="act-period-pill on" data-period="today"  onclick="setActPeriod(\'today\',this)">Aaj</button>'
-        +'<button class="act-period-pill"    data-period="week"   onclick="setActPeriod(\'week\',this)">Is Hafte</button>'
-        +'<button class="act-period-pill"    data-period="all"    onclick="setActPeriod(\'all\',this)">Sab</button>'
-        +'<button class="act-period-pill"    data-period="custom" onclick="setActPeriod(\'custom\',this)">📅 Custom Range</button>'
+      +'<span class="act-filter-lbl">Period</span>'
+      +'<div class="act-ppills">'
+        +'<button class="act-pp on" data-p="today" onclick="setActPeriod(\'today\',this)">Aaj</button>'
+        +'<button class="act-pp" data-p="week"   onclick="setActPeriod(\'week\',this)">Is Hafte</button>'
+        +'<button class="act-pp" data-p="all"    onclick="setActPeriod(\'all\',this)">Sab</button>'
+        +'<button class="act-pp" data-p="custom" onclick="setActPeriod(\'custom\',this)">📅 Custom</button>'
       +'</div>'
-      // Exec filter
-      +'<div class="act-filter-label" style="margin-left:6px">Executive</div>'
-      +'<select id="actExecFilter" class="act-exec-select" onchange="setActExec(this.value)">'
+      +'<span class="act-filter-lbl" style="margin-left:4px">Executive</span>'
+      +'<select id="actExecSel" class="act-esel" onchange="setActExec(this.value)">'
         +'<option value="">All Executives</option>'
       +'</select>'
-      // Clear btn
-      +'<button class="act-clear-btn" onclick="clearActFilters()">✕ Reset</button>'
+      +'<button class="act-clr" onclick="clearActFilters()">✕ Reset</button>'
     +'</div>'
 
-    // Custom date range (hidden by default)
-    +'<div id="actCustomRange" style="display:none;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;padding:10px 14px;background:var(--orange-bg);border:1px solid rgba(217,119,6,.2);border-radius:10px;">'
+    /* Custom Range */
+    +'<div id="actCRange" class="act-crange">'
       +'<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--orange)">Date Range</span>'
-      +'<input type="date" id="actDateFrom" class="act-date-inp" onchange="setActDateRange()" placeholder="From">'
+      +'<input type="date" id="actDF" class="act-di" onchange="applyActRange()">'
       +'<span style="color:var(--dim)">—</span>'
-      +'<input type="date" id="actDateTo" class="act-date-inp" onchange="setActDateRange()" placeholder="To">'
-      +'<span style="font-size:10px;color:var(--orange)">Select dono dates fir auto-filter hoga</span>'
+      +'<input type="date" id="actDT" class="act-di" onchange="applyActRange()">'
+      +'<span style="font-size:10px;color:var(--orange)">Dono dates select karo — auto filter hoga</span>'
     +'</div>'
 
-    // Stats
-    +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px" id="actStats"></div>'
+    /* Stats */
+    +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:12px" id="actStatsRow"></div>'
 
-    // Feed card
+    /* Feed */
     +'<div class="dcard">'
       +'<div class="dcard-hdr">'
         +'<div class="dcard-title">Activity <span>Feed</span></div>'
@@ -1688,21 +1450,56 @@ function rebuildActViewHTML() {
       +'</div>'
       +'<div id="actList" style="max-height:560px;overflow-y:auto"></div>'
     +'</div>'
-  +'</div>';
+    +'</div>';
 }
 
-/* ─── INIT ───────────────────────────────────────────── */
-function init() {
-  rebuildActViewHTML();
+/* ── PATCH showView ── */
+var _sv2=window.showView;
+window.showView=function(v){
+  _sv2&&_sv2(v);
+  if(v==='act'){
+    var nc=document.getElementById('nav-act');
+    document.querySelectorAll('.tb-ni').forEach(function(b){b.classList.remove('active');});
+    if(nc)nc.classList.add('active');
+    window.buildActView();
+  }
+};
+
+/* ── PATCH enterApp to show Activity tab ── */
+var _ea2=window.enterApp;
+window.enterApp=function(){
+  _ea2&&_ea2();
+  setTimeout(function(){
+    var at=document.getElementById('nav-act');
+    if(at)at.style.display='flex';
+    rebuildViewAct();
+  },200);
+};
+
+/* ── PATCH buildAll ── */
+var _ba2=window.buildAll;
+window.buildAll=function(){
+  _ba2&&_ba2();
+  if(document.getElementById('view-act')&&document.getElementById('view-act').classList.contains('active')){
+    window.buildActView();
+  }
+};
+
+/* ── INIT ── */
+function initAct(){
+  /* If already logged in (session restore), rebuild immediately */
+  setTimeout(function(){
+    var at=document.getElementById('nav-act');
+    if(at)at.style.display='flex';
+    rebuildViewAct();
+  },300);
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  setTimeout(init, 150);
-}
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initAct);}
+else{setTimeout(initAct,200);}
 
 })();
 </script>
+
 </body>
 </html>
