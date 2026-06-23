@@ -199,6 +199,18 @@ td{padding:10px 12px;vertical-align:middle}
 .fg{display:flex;flex-direction:column;gap:5px}.fl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--sub)}
 .fi,.fs{padding:9px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;outline:none;width:100%;transition:all .2s;}
 .fi:focus,.fs:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+
+/* ── COMBO INPUT (dropdown + free-type) ── */
+.combo-wrap{position:relative;width:100%}
+.combo-wrap .combo-select{padding:9px 32px 9px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px 8px 0 0;color:var(--text);font-size:12px;outline:none;width:100%;transition:all .2s;appearance:none;-webkit-appearance:none;cursor:pointer;border-bottom-color:transparent;}
+.combo-wrap .combo-select:focus{border-color:var(--blue);background:#fff;}
+.combo-wrap .combo-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--dim);font-size:10px}
+.combo-wrap .combo-text{padding:7px 12px;background:#fff;border:1.5px solid var(--border);border-radius:0 0 8px 8px;color:var(--text);font-size:12px;outline:none;width:100%;transition:all .2s;border-top:1px dashed var(--border2);}
+.combo-wrap .combo-text:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+.combo-wrap .combo-text::placeholder{color:var(--dim);font-size:11px}
+.combo-wrap .combo-select:focus,.combo-wrap .combo-text:focus{background:#fff;}
+.combo-hint{font-size:9px;color:var(--dim);margin-top:3px;font-style:italic}
+
 .bp{padding:9px 18px;background:var(--gold);border:none;border-radius:8px;color:#1B2B4B;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s}
 .bp:hover{background:#E6A812;transform:translateY(-1px)}.bp.pri{background:var(--blue);color:#fff}.bp.pri:hover{background:#1d4ed8}
 .bs{padding:9px 14px;border-radius:8px;border:1.5px solid var(--border);background:none;color:var(--sub);font-size:12px;cursor:pointer;transition:all .2s}
@@ -280,7 +292,7 @@ td{padding:10px 12px;vertical-align:middle}
 .loading-box{background:#fff;border-radius:16px;padding:32px 40px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);}
 .loading-spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
 @keyframes spin{to{transform:rotate(360deg)}}
-/* Activity Log specific */
+/* Activity Log */
 .act-role-badge{padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
 .act-owner{background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold-border)}
 .act-bdm{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(37,99,235,.2)}
@@ -290,11 +302,21 @@ td{padding:10px 12px;vertical-align:middle}
 .act-summary-val{font-size:36px;font-weight:800;line-height:1}
 .act-summary-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--dim)}
 .act-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:auto;box-shadow:var(--shadow)}
-.act-table{width:100%;border-collapse:collapse;min-width:750px}
+.act-table{width:100%;border-collapse:collapse;min-width:850px}
 .act-table thead th{background:#1B2B4B;color:rgba(255,255,255,.7);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;padding:10px 14px;text-align:left;}
 .act-table thead th:first-child{border-radius:12px 0 0 0}.act-table thead th:last-child{border-radius:0 12px 0 0}
 .act-table tbody tr{border-bottom:1px solid var(--border)}.act-table tbody tr:hover{background:var(--bg)}
 .act-table td{padding:10px 14px;font-size:12px;color:var(--text);vertical-align:middle}
+/* Note chip in activity table */
+.act-note-chip{display:inline-block;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--sub);vertical-align:middle}
+.act-note-chip.has-note{background:var(--blue-bg);border-color:rgba(37,99,235,.2);color:var(--blue)}
+/* Action type tag */
+.act-type-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap}
+.act-type-add{background:var(--green-bg);color:var(--green);border:1px solid rgba(5,150,105,.2)}
+.act-type-update{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(37,99,235,.2)}
+.act-type-stage{background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold-border)}
+.act-type-note{background:var(--purple-bg);color:var(--purple);border:1px solid rgba(124,58,237,.2)}
+.act-type-other{background:var(--bg);color:var(--sub);border:1px solid var(--border)}
 @media(max-width:1200px){.kpi-grid,.fms-stats{grid-template-columns:repeat(3,1fr)}.dg3{grid-template-columns:1fr 1fr}.mis-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:700px){.kpi-grid,.fms-stats{grid-template-columns:repeat(2,1fr)}.dg2,.dg3,.dg32{grid-template-columns:1fr}.date-filter-box{flex-wrap:wrap}.date-filter-box input[type=date]{width:100px}}
 </style>
@@ -449,17 +471,16 @@ td{padding:10px 12px;vertical-align:middle}
       </div>
     </div>
 
-    <!-- ACTIVITY LOG -->
+    <!-- ACTIVITY LOG — UPDATED -->
     <div class="view" id="view-activity">
       <div class="section-wrap">
         <div style="margin-bottom:18px">
           <div style="font-size:20px;font-weight:800">📝 Activity Log</div>
-          <div style="font-size:12px;color:var(--dim);margin-top:3px">Kis doer ne kab kis lead par kya action liya — automatically tracked</div>
+          <div style="font-size:12px;color:var(--dim);margin-top:3px">Doer ne kab kya action liya — automatically tracked with notes</div>
         </div>
 
         <!-- FILTERS -->
-        <div class="toolbar" style="margin-bottom:12px">
-          <!-- Date Range Filter -->
+        <div class="toolbar" style="margin-bottom:8px">
           <div class="date-filter-box">
             <span style="color:var(--orange);font-size:13px">📅</span>
             <label style="color:var(--orange)">Date</label>
@@ -468,11 +489,10 @@ td{padding:10px 12px;vertical-align:middle}
             <input type="date" id="actDateTo" onchange="renderActivityLog()">
             <button class="date-clear-btn" onclick="clearActDateFilter()">✕ Clear</button>
           </div>
-          <!-- Doer Filter -->
           <div class="date-filter-box">
             <span style="color:var(--blue);font-size:13px">👤</span>
             <label style="color:var(--blue)">Doer</label>
-            <select id="actDoerFilter" onchange="renderActivityLog()" style="background:none;border:none;outline:none;color:var(--text);font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;padding:0">
+            <select id="actDoerFilter" onchange="renderActivityLog()">
               <option value="All">All Roles</option>
               <option value="owner">👑 Owner</option>
               <option value="bdm1">💼 BDM 1</option>
@@ -482,29 +502,50 @@ td{padding:10px 12px;vertical-align:middle}
               <option value="pc">📋 PC</option>
             </select>
           </div>
-          <!-- Quick Range Buttons -->
+          <!-- Action type filter -->
+          <div class="date-filter-box">
+            <span style="color:var(--purple);font-size:13px">🔖</span>
+            <label style="color:var(--purple)">Type</label>
+            <select id="actTypeFilter" onchange="renderActivityLog()">
+              <option value="All">All Actions</option>
+              <option value="add">➕ Lead Added</option>
+              <option value="stage">🔄 Stage Change</option>
+              <option value="note">📝 Note Added</option>
+              <option value="update">✏️ Details Updated</option>
+            </select>
+          </div>
+        </div>
+        <!-- Quick Range Buttons -->
+        <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
           <button class="fb" id="actQ-today" onclick="setActQuick('today',this)">Today</button>
           <button class="fb" id="actQ-7d" onclick="setActQuick('7d',this)">Last 7 Days</button>
           <button class="fb" id="actQ-10d" onclick="setActQuick('10d',this)">Last 10 Days</button>
+          <button class="fb" id="actQ-15d" onclick="setActQuick('15d',this)">Last 15 Days</button>
           <button class="fb" id="actQ-30d" onclick="setActQuick('30d',this)">Last 30 Days</button>
+          <button class="fb" id="actQ-1m" onclick="setActQuick('1m',this)">1 Month</button>
         </div>
 
         <!-- SUMMARY CARDS -->
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px">
           <div class="act-summary-card" style="border-top:3px solid var(--blue)">
             <div class="act-summary-val" style="color:var(--blue)" id="actTotalActions">0</div>
             <div class="act-summary-lbl">Total Actions</div>
-            <div style="font-size:10px;color:var(--dim);margin-top:2px">Selected range me</div>
+            <div style="font-size:10px;color:var(--dim);margin-top:2px">Selected range</div>
           </div>
           <div class="act-summary-card" style="border-top:3px solid var(--green)">
-            <div class="act-summary-val" style="color:var(--green)" id="actUniqueLeads">0</div>
-            <div class="act-summary-lbl">Unique Leads Worked</div>
+            <div class="act-summary-val" style="color:var(--green)" id="actLeadsAdded">0</div>
+            <div class="act-summary-lbl">Leads Added</div>
+            <div style="font-size:10px;color:var(--dim);margin-top:2px">New leads in range</div>
+          </div>
+          <div class="act-summary-card" style="border-top:3px solid var(--orange)">
+            <div class="act-summary-val" style="color:var(--orange)" id="actUniqueLeads">0</div>
+            <div class="act-summary-lbl">Leads Worked</div>
             <div style="font-size:10px;color:var(--dim);margin-top:2px">Distinct leads</div>
           </div>
           <div class="act-summary-card" style="border-top:3px solid var(--gold)">
             <div class="act-summary-val" style="color:var(--gold)" id="actActiveDoers">0</div>
             <div class="act-summary-lbl">Active Doers</div>
-            <div style="font-size:10px;color:var(--dim);margin-top:2px">Unique roles active</div>
+            <div style="font-size:10px;color:var(--dim);margin-top:2px">Unique roles</div>
           </div>
           <div class="act-summary-card" style="border-top:3px solid var(--purple)">
             <div class="act-summary-val" style="color:var(--purple)" id="actTodayActions">0</div>
@@ -525,6 +566,7 @@ td{padding:10px 12px;vertical-align:middle}
                 <th>Lead Name</th>
                 <th>Phone</th>
                 <th>Action</th>
+                <th>Note / Details</th>
               </tr>
             </thead>
             <tbody id="actLogBody"></tbody>
@@ -536,49 +578,111 @@ td{padding:10px 12px;vertical-align:middle}
   </div>
 </div>
 
-<!-- ADD/EDIT MODAL -->
+<!-- ADD/EDIT MODAL — UPDATED with combo inputs -->
 <div class="mo" id="addMo">
   <div class="md">
     <div class="mh"><div class="mt" id="addTitle">Add <span>New Lead</span></div><button class="mc2" id="closeAddMo">✕</button></div>
     <div class="mb">
       <div class="form-section-title">Lead Classification</div>
-      <div class="fr full"><div class="fg"><label class="fl">Lead Type *</label><select class="fs" id="a-leadtype"><option value="">Select...</option><option value="Direct Client">Direct Client</option><option value="Consultancy Firm Lead">Consultancy Firm Lead</option><option value="Architect / Interior Designer Lead">Architect / Interior Designer Lead</option><option value="Runner Lead">Runner Lead</option></select></div></div>
+      <div class="fr full">
+        <div class="fg">
+          <label class="fl">Lead Type *</label>
+          <div class="combo-wrap">
+            <select class="combo-select" id="a-leadtype-sel" onchange="syncCombo('leadtype')">
+              <option value="">Select or type below...</option>
+              <option value="Direct Client">Direct Client</option>
+              <option value="Consultancy Firm Lead">Consultancy Firm Lead</option>
+              <option value="Architect / Interior Designer Lead">Architect / Interior Designer Lead</option>
+              <option value="Runner Lead">Runner Lead</option>
+            </select>
+            <span class="combo-arrow">▾</span>
+            <input class="combo-text" id="a-leadtype" placeholder="Ya yahan type karein..." oninput="syncComboText('leadtype')">
+          </div>
+        </div>
+      </div>
       <div class="form-section-title">Contact Information</div>
       <div class="fr"><div class="fg"><label class="fl">Customer Name *</label><input class="fi" id="a-name" placeholder="Full Name"></div><div class="fg"><label class="fl">Phone *</label><input class="fi" id="a-phone" placeholder="10-digit number" maxlength="10"></div></div>
       <div class="fr"><div class="fg"><label class="fl">Email</label><input class="fi" id="a-email" type="email" placeholder="email@example.com"></div><div class="fg"><label class="fl">Company</label><input class="fi" id="a-company" placeholder="Company name"></div></div>
       <div class="form-section-title">Project Details</div>
       <div class="fr">
-        <div class="fg"><label class="fl">Requirement *</label>
-          <select class="fs" id="a-req">
-            <option value="">Select...</option>
-            <optgroup label="Modular"><option>Kitchen</option><option>Wardrobe</option><option>Kitchen &amp; Wardrobe</option><option>TV Unit</option><option>Study Unit</option></optgroup>
-            <optgroup label="Full Interior"><option>Full Home Interior</option><option>Living Room</option><option>Bedroom</option><option>Master Bedroom</option><option>Kids Room</option></optgroup>
-            <optgroup label="Commercial"><option>Office Interior</option><option>Showroom / Retail</option><option>Restaurant / Cafe</option></optgroup>
-            <optgroup label="Renovation"><option>Renovation (Partial)</option><option>Renovation (Full)</option><option>False Ceiling</option><option>Flooring</option></optgroup>
-            <optgroup label="Loose Furniture"><option>Sofa Set</option><option>Dining Table &amp; Chairs</option><option>Bed &amp; Mattress</option><option>Coffee Table</option><option>Wardrobe (Loose)</option><option>Study Table &amp; Chair</option><option>Shoe Rack</option><option>Other Loose Furniture</option></optgroup>
-            <optgroup label="Soft Furnishing"><option>Curtains &amp; Blinds</option><option>Wallpaper</option><option>Cushions &amp; Covers</option><option>Bed Linen</option><option>Rugs &amp; Carpets</option><option>Other Soft Furnishing</option></optgroup>
-            <option>Home Decor</option>
-            <option>Other</option>
-          </select>
+        <div class="fg">
+          <label class="fl">Requirement *</label>
+          <div class="combo-wrap">
+            <select class="combo-select" id="a-req-sel" onchange="syncCombo('req')">
+              <option value="">Select or type below...</option>
+              <optgroup label="Modular"><option>Kitchen</option><option>Wardrobe</option><option>Kitchen &amp; Wardrobe</option><option>TV Unit</option><option>Study Unit</option></optgroup>
+              <optgroup label="Full Interior"><option>Full Home Interior</option><option>Living Room</option><option>Bedroom</option><option>Master Bedroom</option><option>Kids Room</option></optgroup>
+              <optgroup label="Commercial"><option>Office Interior</option><option>Showroom / Retail</option><option>Restaurant / Cafe</option></optgroup>
+              <optgroup label="Renovation"><option>Renovation (Partial)</option><option>Renovation (Full)</option><option>False Ceiling</option><option>Flooring</option></optgroup>
+              <optgroup label="Loose Furniture"><option>Sofa Set</option><option>Dining Table &amp; Chairs</option><option>Bed &amp; Mattress</option><option>Coffee Table</option><option>Wardrobe (Loose)</option><option>Study Table &amp; Chair</option><option>Shoe Rack</option><option>Other Loose Furniture</option></optgroup>
+              <optgroup label="Soft Furnishing"><option>Curtains &amp; Blinds</option><option>Wallpaper</option><option>Cushions &amp; Covers</option><option>Bed Linen</option><option>Rugs &amp; Carpets</option><option>Other Soft Furnishing</option></optgroup>
+              <option>Home Decor</option>
+              <option>Other</option>
+            </select>
+            <span class="combo-arrow">▾</span>
+            <input class="combo-text" id="a-req" placeholder="Ya yahan type karein..." oninput="syncComboText('req')">
+          </div>
         </div>
-        <div class="fg"><label class="fl">Lead Source</label>
-          <select class="fs" id="a-src">
-            <option value="">Select...</option>
-            <optgroup label="Digital"><option>Instagram</option><option>Google</option><option>Facebook</option><option>YouTube</option><option>WhatsApp Broadcast</option><option>Website Enquiry</option></optgroup>
-            <optgroup label="Referral"><option>Reference (Client)</option><option>Reference (Architect)</option><option>Consultancy Firm</option><option>Architect / Interior Designer</option><option>Builder / Developer</option></optgroup>
-            <optgroup label="Direct"><option>Walk-in</option><option>Exhibition</option><option>Cold Call</option><option>Existing Client (Repeat)</option></optgroup>
-            <option>Other</option>
-          </select>
+        <div class="fg">
+          <label class="fl">Lead Source</label>
+          <div class="combo-wrap">
+            <select class="combo-select" id="a-src-sel" onchange="syncCombo('src')">
+              <option value="">Select or type below...</option>
+              <optgroup label="Digital"><option>Instagram</option><option>Google</option><option>Facebook</option><option>YouTube</option><option>WhatsApp Broadcast</option><option>Website Enquiry</option></optgroup>
+              <optgroup label="Referral"><option>Reference (Client)</option><option>Reference (Architect)</option><option>Consultancy Firm</option><option>Architect / Interior Designer</option><option>Builder / Developer</option></optgroup>
+              <optgroup label="Direct"><option>Walk-in</option><option>Exhibition</option><option>Cold Call</option><option>Existing Client (Repeat)</option></optgroup>
+              <option>Other</option>
+            </select>
+            <span class="combo-arrow">▾</span>
+            <input class="combo-text" id="a-src" placeholder="Ya yahan type karein..." oninput="syncComboText('src')">
+          </div>
         </div>
       </div>
       <div class="fr full"><div class="fg"><label class="fl">Location</label><input class="fi" id="a-loc" placeholder="Sector, City..."></div></div>
       <div class="form-section-title">Assignment &amp; Priority</div>
       <div class="fr t3">
         <div class="fg"><label class="fl">Assigned To</label><input class="fi" id="a-exec" placeholder="Executive name"></div>
-        <div class="fg"><label class="fl">Budget</label><select class="fs" id="a-budget"><option value="">Select...</option><option>Under ₹50K</option><option>₹50K – 1L</option><option>₹1L – 2L</option><option>₹2L – 5L</option><option>₹5L – 10L</option><option>₹10L – 20L</option><option>₹20L – 50L</option><option>₹50L+</option></select></div>
-        <div class="fg"><label class="fl">Priority</label><select class="fs" id="a-pri"><option value="Med">Medium</option><option value="High">High</option><option value="Low">Low</option></select></div>
+        <div class="fg">
+          <label class="fl">Budget</label>
+          <div class="combo-wrap">
+            <select class="combo-select" id="a-budget-sel" onchange="syncCombo('budget')">
+              <option value="">Select or type below...</option>
+              <option>Under ₹50K</option><option>₹50K – 1L</option><option>₹1L – 2L</option>
+              <option>₹2L – 5L</option><option>₹5L – 10L</option><option>₹10L – 20L</option>
+              <option>₹20L – 50L</option><option>₹50L+</option>
+            </select>
+            <span class="combo-arrow">▾</span>
+            <input class="combo-text" id="a-budget" placeholder="Ya yahan type karein..." oninput="syncComboText('budget')">
+          </div>
+        </div>
+        <div class="fg">
+          <label class="fl">Priority</label>
+          <div class="combo-wrap">
+            <select class="combo-select" id="a-pri-sel" onchange="syncCombo('pri')">
+              <option value="Med">Medium</option>
+              <option value="High">High</option>
+              <option value="Low">Low</option>
+            </select>
+            <span class="combo-arrow">▾</span>
+            <input class="combo-text" id="a-pri" placeholder="Ya custom priority..." oninput="syncComboText('pri')">
+          </div>
+        </div>
       </div>
-      <div class="fr"><div class="fg"><label class="fl">Lead Date</label><input class="fi" type="date" id="a-date"></div><div class="fg"><label class="fl">Timeline</label><select class="fs" id="a-timeline"><option value="">Select...</option><option>Immediate (0–1 Month)</option><option>1–3 Months</option><option>3–6 Months</option><option>6–12 Months</option><option>More than 1 Year</option><option>Under Construction</option></select></div></div>
+      <div class="fr">
+        <div class="fg"><label class="fl">Lead Date</label><input class="fi" type="date" id="a-date"></div>
+        <div class="fg">
+          <label class="fl">Timeline</label>
+          <div class="combo-wrap">
+            <select class="combo-select" id="a-timeline-sel" onchange="syncCombo('timeline')">
+              <option value="">Select or type below...</option>
+              <option>Immediate (0–1 Month)</option><option>1–3 Months</option><option>3–6 Months</option>
+              <option>6–12 Months</option><option>More than 1 Year</option><option>Under Construction</option>
+            </select>
+            <span class="combo-arrow">▾</span>
+            <input class="combo-text" id="a-timeline" placeholder="Ya yahan type karein..." oninput="syncComboText('timeline')">
+          </div>
+        </div>
+      </div>
       <div class="fr full"><div class="fg"><label class="fl">Remarks</label><input class="fi" id="a-rem" placeholder="Key points from first interaction..."></div></div>
     </div>
     <div class="mf"><button class="bs" id="cancelAddMo">Cancel</button><button class="bp pri" id="saveLeadBtn">💾 Save &amp; Open Pipeline →</button></div>
@@ -628,6 +732,41 @@ function getVis(){if(currentRole==='owner')return leads;if(currentRole==='pc')re
 function getPCLeads(sf){return leads.filter(function(l){if(!l.pipeline)return false;var p=l.pipeline,s=p.stage,n=today();if(s==='advance'||s==='lost')return false;var od=false;if(s==='fu1'&&p.fu1.planned&&p.fu1.planned<n&&!p.fu1.actual)od=true;if(s==='fu2'&&p.fu2.planned&&p.fu2.planned<n&&!p.fu2.actual)od=true;if(s==='fu3'&&p.fu3.planned&&p.fu3.planned<n&&!p.fu3.actual)od=true;if(s==='meeting'&&p.meeting.planned&&p.meeting.planned<n&&!p.meeting.actual)od=true;if(!od)return false;if(sf&&sf!=='all')return s===sf;return true;}).sort(function(a,b){return getOverdueDays(b)-getOverdueDays(a);});}
 function getOverdueDays(l){if(!l.pipeline)return 0;var p=l.pipeline,s=p.stage,n=today(),pl='';if(s==='fu1')pl=p.fu1.planned||'';else if(s==='fu2')pl=p.fu2.planned||'';else if(s==='fu3')pl=p.fu3.planned||'';else if(s==='meeting')pl=p.meeting.planned||'';if(!pl)return 0;return Math.max(0,Math.ceil((new Date(n)-new Date(pl))/86400000));}
 
+/* ── COMBO INPUT SYNC ── */
+function syncCombo(field){
+  var sel=document.getElementById('a-'+field+'-sel');
+  var txt=document.getElementById('a-'+field);
+  if(sel&&txt){txt.value=sel.value;}
+}
+function syncComboText(field){
+  var sel=document.getElementById('a-'+field+'-sel');
+  var txt=document.getElementById('a-'+field);
+  if(sel&&txt){
+    // If typed value matches an option, select it; otherwise clear selection
+    var found=false;
+    for(var i=0;i<sel.options.length;i++){
+      if(sel.options[i].value===txt.value){sel.value=txt.value;found=true;break;}
+    }
+    if(!found)sel.value='';
+  }
+}
+function setComboVal(field,val){
+  var sel=document.getElementById('a-'+field+'-sel');
+  var txt=document.getElementById('a-'+field);
+  if(txt)txt.value=val||'';
+  if(sel){
+    var found=false;
+    for(var i=0;i<sel.options.length;i++){
+      if(sel.options[i].value===val){sel.value=val;found=true;break;}
+    }
+    if(!found)sel.value='';
+  }
+}
+function getComboVal(field){
+  var txt=document.getElementById('a-'+field);
+  return txt?txt.value.trim():'';
+}
+
 function sbFetch(path,method,body){var opts={method:method||'GET',headers:Object.assign({},HEADERS)};if(body)opts.body=JSON.stringify(body);return fetch(API+path,opts).then(function(r){if(!r.ok)return r.text().then(function(t){throw new Error(t);});if(r.status===204)return null;return r.json();});}
 
 function loadData(){
@@ -650,12 +789,49 @@ function savePCNote_db(leadId,stage,noteText,noteBy,noteTs,cb){var row={lead_id:
 function setSS(s,t){var d=document.getElementById('syncDot'),tx=document.getElementById('syncTxt');d.className='sync-dot '+s;tx.textContent=t;}
 function buildAll(){renderTable();buildDash();buildMIS();if(currentRole==='pc'||currentRole==='owner')buildPC();}
 
-/* ══ ACTIVITY LOG FUNCTIONS ══ */
-function logActivity(actionText,lead){
+/* ══ ACTIVITY LOG — UPDATED ══ */
+/* Classify action text into type */
+function classifyAction(text){
+  if(!text)return'other';
+  var t=text.toLowerCase();
+  if(t.indexOf('new lead added')>-1||t.indexOf('lead added')>-1)return'add';
+  if(t.indexOf('note added')>-1||t.indexOf('pc note')>-1)return'note';
+  if(t.indexOf('moved to')>-1||t.indexOf('stage change')>-1||t.indexOf('marked as')>-1||t.indexOf('re-activated')>-1||t.indexOf('→')>-1)return'stage';
+  if(t.indexOf('edited')>-1||t.indexOf('updated')>-1||t.indexOf('saved')>-1||t.indexOf('details')>-1)return'update';
+  return'other';
+}
+
+function actTypeBadge(text){
+  var type=classifyAction(text);
+  var map={
+    add:'<span class="act-type-tag act-type-add">➕ Lead Added</span>',
+    note:'<span class="act-type-tag act-type-note">📝 Note</span>',
+    stage:'<span class="act-type-tag act-type-stage">🔄 Stage Change</span>',
+    update:'<span class="act-type-tag act-type-update">✏️ Updated</span>',
+    other:'<span class="act-type-tag act-type-other">📌 Action</span>'
+  };
+  return map[type]||map.other;
+}
+
+/* Extract the note part from action text */
+function extractNoteFromAction(text){
+  if(!text)return'';
+  // PC Note added: <note>
+  var m=text.match(/PC Note added:\s*(.+)/i);if(m)return m[1];
+  // FU updated — status: <status>
+  m=text.match(/status:\s*(.+)/i);if(m)return m[1];
+  // Lost reason updated: <reason>
+  m=text.match(/reason updated:\s*(.+)/i);if(m)return m[1];
+  // Value: ₹xxx or Advance: ₹xxx
+  m=text.match(/(Value|Advance):\s*(₹.+)/i);if(m)return m[2];
+  return'';
+}
+
+function logActivity(actionText,lead,extraNote){
   if(!currentRole)return;
   var now=new Date();
   var ts=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-  var row={log_date:today(),log_time:ts,doer_role:currentRole,lead_id:lead?lead.id:'',lead_name:lead?lead.name:'',lead_phone:lead?lead.phone:'',action_text:actionText};
+  var row={log_date:today(),log_time:ts,doer_role:currentRole,lead_id:lead?lead.id:'',lead_name:lead?lead.name:'',lead_phone:lead?lead.phone:'',action_text:actionText,note_text:extraNote||extractNoteFromAction(actionText)};
   sbFetch('/activity_log','POST',row).then(function(res){
     if(res&&res[0])activityLog.unshift(res[0]);
     else activityLog.unshift(Object.assign({id:Date.now()},row));
@@ -675,7 +851,7 @@ function loadActivityLog(){
 function clearActDateFilter(){
   document.getElementById('actDateFrom').value='';
   document.getElementById('actDateTo').value='';
-  ['actQ-today','actQ-7d','actQ-10d','actQ-30d'].forEach(function(id){
+  ['actQ-today','actQ-7d','actQ-10d','actQ-15d','actQ-30d','actQ-1m'].forEach(function(id){
     var el=document.getElementById(id);if(el)el.classList.remove('active');
   });
   renderActivityLog();
@@ -686,10 +862,14 @@ function setActQuick(range,btn){
   if(range==='today')fromVal=today();
   else if(range==='7d')fromVal=addDays(today(),-7);
   else if(range==='10d')fromVal=addDays(today(),-10);
+  else if(range==='15d')fromVal=addDays(today(),-15);
   else if(range==='30d')fromVal=addDays(today(),-30);
+  else if(range==='1m'){
+    var d=new Date();d.setMonth(d.getMonth()-1);fromVal=d.toISOString().split('T')[0];
+  }
   document.getElementById('actDateFrom').value=fromVal;
   document.getElementById('actDateTo').value=toVal;
-  ['actQ-today','actQ-7d','actQ-10d','actQ-30d'].forEach(function(id){
+  ['actQ-today','actQ-7d','actQ-10d','actQ-15d','actQ-30d','actQ-1m'].forEach(function(id){
     var el=document.getElementById(id);if(el)el.classList.remove('active');
   });
   if(btn)btn.classList.add('active');
@@ -705,28 +885,35 @@ function renderActivityLog(){
   var from=document.getElementById('actDateFrom').value;
   var to=document.getElementById('actDateTo').value;
   var doer=document.getElementById('actDoerFilter').value;
+  var typeF=document.getElementById('actTypeFilter').value;
 
   var data=activityLog.filter(function(r){
     if(from&&r.log_date<from)return false;
     if(to&&r.log_date>to)return false;
     if(doer!=='All'&&r.doer_role!==doer)return false;
+    if(typeF!=='All'&&classifyAction(r.action_text)!==typeF)return false;
     return true;
   });
 
-  // Summary calculations
-  var uniqueLeads={},uniqueDoers={},todayCount=0;
+  var uniqueLeads={},uniqueDoers={},todayCount=0,addedCount=0;
   data.forEach(function(r){
     if(r.lead_id)uniqueLeads[r.lead_id]=true;
     if(r.doer_role)uniqueDoers[r.doer_role]=true;
     if(r.log_date===today())todayCount++;
+    if(classifyAction(r.action_text)==='add')addedCount++;
   });
 
   document.getElementById('actTotalActions').textContent=data.length;
+  document.getElementById('actLeadsAdded').textContent=addedCount;
   document.getElementById('actUniqueLeads').textContent=Object.keys(uniqueLeads).length;
   document.getElementById('actActiveDoers').textContent=Object.keys(uniqueDoers).length;
   document.getElementById('actTodayActions').textContent=todayCount;
 
   document.getElementById('actLogBody').innerHTML=data.length?data.map(function(r,i){
+    var noteText=r.note_text||extractNoteFromAction(r.action_text)||'';
+    var noteHtml=noteText
+      ?'<span class="act-note-chip has-note" title="'+escHtml(noteText)+'">'+escHtml(noteText.length>40?noteText.slice(0,40)+'…':noteText)+'</span>'
+      :'<span style="color:var(--dim);font-size:10px">—</span>';
     return'<tr>'
     +'<td style="padding-left:16px;color:var(--dim);font-size:11px">'+(i+1)+'</td>'
     +'<td style="font-size:11px;color:var(--sub);white-space:nowrap">'+fmtDate(r.log_date)+'</td>'
@@ -734,9 +921,10 @@ function renderActivityLog(){
     +'<td>'+actRoleBadge(r.doer_role)+'</td>'
     +'<td style="font-weight:600">'+escHtml(r.lead_name||'—')+'</td>'
     +'<td style="font-size:11px;color:var(--sub)">'+(r.lead_phone||'—')+'</td>'
-    +'<td style="font-size:12px;color:var(--text)">'+escHtml(r.action_text)+'</td>'
+    +'<td>'+actTypeBadge(r.action_text)+'<span style="font-size:11px;color:var(--sub);margin-left:5px">'+escHtml(r.action_text)+'</span></td>'
+    +'<td>'+noteHtml+'</td>'
     +'</tr>';
-  }).join(''):'<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--dim)">📭 No activity found for selected filters</td></tr>';
+  }).join(''):'<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--dim)">📭 No activity found for selected filters</td></tr>';
 }
 /* ══ END ACTIVITY LOG ══ */
 
@@ -809,16 +997,49 @@ function renderTable(){
   updateFMSStats();
 }
 
-function openAdd(l){if(READ_ONLY.includes(currentRole)){showToast('⚠ View only','e');return;}editingId=l?l.id:null;document.getElementById('addTitle').innerHTML=l?'Edit <span>Lead</span>':'Add <span>New Lead</span>';['name','phone','email','company','req','src','loc','exec','budget','pri','date','rem','leadtype','timeline'].forEach(function(k){var el=document.getElementById('a-'+k);if(el)el.value=l?(l[k]||''):(k==='pri'?'Med':k==='date'?today():'');});openMo('addMo');}
+function openAdd(l){
+  if(READ_ONLY.includes(currentRole)){showToast('⚠ View only','e');return;}
+  editingId=l?l.id:null;
+  document.getElementById('addTitle').innerHTML=l?'Edit <span>Lead</span>':'Add <span>New Lead</span>';
+  // Text-only fields
+  ['name','phone','email','company','loc','exec','rem'].forEach(function(k){
+    var el=document.getElementById('a-'+k);if(el)el.value=l?(l[k]||''):'';
+  });
+  // Date
+  var dEl=document.getElementById('a-date');if(dEl)dEl.value=l?(l.date||today()):today();
+  // Combo fields
+  ['leadtype','req','src','budget','pri','timeline'].forEach(function(k){
+    setComboVal(k,l?(l[k]||''):(k==='pri'?'Med':''));
+  });
+  openMo('addMo');
+}
 
 function saveLeadForm(){
-  var name=document.getElementById('a-name').value.trim(),phone=document.getElementById('a-phone').value.trim(),req=document.getElementById('a-req').value;
+  var name=document.getElementById('a-name').value.trim(),phone=document.getElementById('a-phone').value.trim();
+  var req=getComboVal('req');
   if(!name||!phone||!req){showToast('⚠ Name, Phone and Requirement required','e');return;}
   if(phone.length<10){showToast('⚠ 10-digit phone required','e');return;}
   var dateVal=document.getElementById('a-date').value||today();
   var isEdit=!!editingId;
   var existing=isEdit?leads.find(function(l){return l.id===editingId;}):null;
-  var lead={id:editingId||'L'+Date.now(),name:name,phone:phone,email:document.getElementById('a-email').value.trim(),company:document.getElementById('a-company').value.trim(),req:req,src:document.getElementById('a-src').value,loc:document.getElementById('a-loc').value.trim(),exec:document.getElementById('a-exec').value.trim(),assigned_role:currentRole,budget:document.getElementById('a-budget').value,pri:document.getElementById('a-pri').value||'Med',date:dateVal,rem:document.getElementById('a-rem').value.trim(),leadtype:document.getElementById('a-leadtype').value||'Direct Client',timeline:document.getElementById('a-timeline').value,pipeline:existing?existing.pipeline:initPipeline(dateVal)};
+  var lead={
+    id:editingId||'L'+Date.now(),
+    name:name,phone:phone,
+    email:document.getElementById('a-email').value.trim(),
+    company:document.getElementById('a-company').value.trim(),
+    req:req,
+    src:getComboVal('src'),
+    loc:document.getElementById('a-loc').value.trim(),
+    exec:document.getElementById('a-exec').value.trim(),
+    assigned_role:currentRole,
+    budget:getComboVal('budget'),
+    pri:getComboVal('pri')||'Med',
+    date:dateVal,
+    rem:document.getElementById('a-rem').value.trim(),
+    leadtype:getComboVal('leadtype')||'Direct Client',
+    timeline:getComboVal('timeline'),
+    pipeline:existing?existing.pipeline:initPipeline(dateVal)
+  };
   closeMo('addMo');
   saveLead_db(lead,function(err){
     if(err){showToast('Save failed: '+err.message,'e');return;}
@@ -1074,7 +1295,7 @@ function savePCNoteUI(inp,leadId,stage){
     pcNotes[key].push({text:text,ts:ts,by:noteBy});
     inp.value='';
     var lead=leads.find(function(x){return x.id===leadId;});
-    logActivity('PC Note added: '+text,lead);
+    logActivity('PC Note added: '+text,lead,text);
     buildPC();
     showToast('Note added ✓','s');
   });
