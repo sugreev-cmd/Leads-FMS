@@ -1,3 +1,5 @@
+html
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -317,6 +319,9 @@ td{padding:10px 12px;vertical-align:middle}
 .act-type-stage{background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold-border)}
 .act-type-note{background:var(--purple-bg);color:var(--purple);border:1px solid rgba(124,58,237,.2)}
 .act-type-other{background:var(--bg);color:var(--sub);border:1px solid var(--border)}
+.act-type-proof{background:var(--cyan-bg);color:var(--cyan);border:1px solid rgba(8,145,178,.2)}
+.proof-link-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:600;background:var(--cyan-bg);color:var(--cyan);border:1px solid rgba(8,145,178,.25);text-decoration:none;white-space:nowrap}
+.proof-link-chip:hover{background:var(--cyan);color:#fff}
 @media(max-width:1200px){.kpi-grid,.fms-stats{grid-template-columns:repeat(3,1fr)}.dg3{grid-template-columns:1fr 1fr}.mis-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:700px){.kpi-grid,.fms-stats{grid-template-columns:repeat(2,1fr)}.dg2,.dg3,.dg32{grid-template-columns:1fr}.date-filter-box{flex-wrap:wrap}.date-filter-box input[type=date]{width:100px}}
 </style>
@@ -476,7 +481,7 @@ td{padding:10px 12px;vertical-align:middle}
       <div class="section-wrap">
         <div style="margin-bottom:18px">
           <div style="font-size:20px;font-weight:800">📝 Activity Log</div>
-          <div style="font-size:12px;color:var(--dim);margin-top:3px">Doer ne kab kya action liya — automatically tracked with notes</div>
+          <div style="font-size:12px;color:var(--dim);margin-top:3px">Doer ne kab kya action liya — automatically tracked with notes &amp; proof</div>
         </div>
 
         <!-- FILTERS -->
@@ -511,6 +516,7 @@ td{padding:10px 12px;vertical-align:middle}
               <option value="add">➕ Lead Added</option>
               <option value="stage">🔄 Stage Change</option>
               <option value="note">📝 Note Added</option>
+              <option value="proof">📎 Proof Added</option>
               <option value="update">✏️ Details Updated</option>
             </select>
           </div>
@@ -567,6 +573,7 @@ td{padding:10px 12px;vertical-align:middle}
                 <th>Phone</th>
                 <th>Action</th>
                 <th>Note / Details</th>
+                <th>Proof</th>
               </tr>
             </thead>
             <tbody id="actLogBody"></tbody>
@@ -720,7 +727,8 @@ function avC(n){if(!n)return'#8A96B0';var h=0;for(var i=0;i<n.length;i++)h=(h*31
 function ini(n){if(!n)return'?';return n.trim().split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);}
 function fmtMoney(v){if(!v)return'₹0';var n=parseFloat(String(v).replace(/[^0-9.]/g,''));if(isNaN(n))return'₹0';return n>=100000?'₹'+(n/100000).toFixed(1)+'L':n>=1000?'₹'+(n/1000).toFixed(0)+'K':'₹'+n.toLocaleString('en-IN');}
 function escHtml(t){if(!t)return'';return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function initPipeline(d){return{stage:'fu1',fu1:{planned:d||today(),actual:'',status:'pending',methods:[],notes:''},fu2:{planned:addDays(d||today(),2),actual:'',status:'pending',methods:[],notes:''},fu3:{planned:addDays(d||today(),7),actual:'',status:'pending',methods:[],notes:'',clientNextDate:''},meeting:{planned:'',actual:'',result:null,notes:'',confirmedDate:'',confirmedTime:'',meetingLocation:'',meetingType:'',attendees:''},quotation:{sentDate:'',value:'',ref:'',notes:''},advance:{amount:'',date:'',revenue:'',notes:''},lostReason:'',lostDate:''};}
+function isValidUrl(u){if(!u)return false;return/^https?:\/\/.+/i.test(u.trim());}
+function initPipeline(d){return{stage:'fu1',fu1:{planned:d||today(),actual:'',status:'pending',methods:[],notes:'',proof:''},fu2:{planned:addDays(d||today(),2),actual:'',status:'pending',methods:[],notes:'',proof:''},fu3:{planned:addDays(d||today(),7),actual:'',status:'pending',methods:[],notes:'',clientNextDate:'',proof:''},meeting:{planned:'',actual:'',result:null,notes:'',confirmedDate:'',confirmedTime:'',meetingLocation:'',meetingType:'',attendees:'',proof:''},quotation:{sentDate:'',value:'',ref:'',notes:'',proof:''},advance:{amount:'',date:'',revenue:'',notes:'',proof:''},lostReason:'',lostDate:''};}
 function isOverdue(l){if(!l.pipeline)return false;var p=l.pipeline,n=today();if(p.stage==='fu1'&&p.fu1.planned&&p.fu1.planned<n&&!p.fu1.actual)return true;if(p.stage==='fu2'&&p.fu2.planned&&p.fu2.planned<n&&!p.fu2.actual)return true;if(p.stage==='fu3'&&p.fu3.planned&&p.fu3.planned<n&&!p.fu3.actual)return true;if(p.stage==='meeting'&&p.meeting.planned&&p.meeting.planned<n&&!p.meeting.actual)return true;return false;}
 function isDueToday(l){if(!l.pipeline)return false;var p=l.pipeline,n=today();return(p.stage==='fu1'&&p.fu1.planned===n)||(p.stage==='fu2'&&p.fu2.planned===n)||(p.stage==='fu3'&&p.fu3.planned===n)||(p.stage==='meeting'&&p.meeting.planned===n);}
 function stageLabel(s){return{fu1:'Follow-up 1',fu2:'Follow-up 2',fu3:'Follow-up 3',meeting:'Meeting',quotation:'Quotation',advance:'Advance Rcvd',lost:'Lost'}[s]||s;}
@@ -742,7 +750,6 @@ function syncComboText(field){
   var sel=document.getElementById('a-'+field+'-sel');
   var txt=document.getElementById('a-'+field);
   if(sel&&txt){
-    // If typed value matches an option, select it; otherwise clear selection
     var found=false;
     for(var i=0;i<sel.options.length;i++){
       if(sel.options[i].value===txt.value){sel.value=txt.value;found=true;break;}
@@ -790,11 +797,11 @@ function setSS(s,t){var d=document.getElementById('syncDot'),tx=document.getElem
 function buildAll(){renderTable();buildDash();buildMIS();if(currentRole==='pc'||currentRole==='owner')buildPC();}
 
 /* ══ ACTIVITY LOG — UPDATED ══ */
-/* Classify action text into type */
 function classifyAction(text){
   if(!text)return'other';
   var t=text.toLowerCase();
   if(t.indexOf('new lead added')>-1||t.indexOf('lead added')>-1)return'add';
+  if(t.indexOf('proof')>-1)return'proof';
   if(t.indexOf('note added')>-1||t.indexOf('pc note')>-1)return'note';
   if(t.indexOf('moved to')>-1||t.indexOf('stage change')>-1||t.indexOf('marked as')>-1||t.indexOf('re-activated')>-1||t.indexOf('→')>-1)return'stage';
   if(t.indexOf('edited')>-1||t.indexOf('updated')>-1||t.indexOf('saved')>-1||t.indexOf('details')>-1)return'update';
@@ -806,6 +813,7 @@ function actTypeBadge(text){
   var map={
     add:'<span class="act-type-tag act-type-add">➕ Lead Added</span>',
     note:'<span class="act-type-tag act-type-note">📝 Note</span>',
+    proof:'<span class="act-type-tag act-type-proof">📎 Proof</span>',
     stage:'<span class="act-type-tag act-type-stage">🔄 Stage Change</span>',
     update:'<span class="act-type-tag act-type-update">✏️ Updated</span>',
     other:'<span class="act-type-tag act-type-other">📌 Action</span>'
@@ -813,31 +821,33 @@ function actTypeBadge(text){
   return map[type]||map.other;
 }
 
-/* Extract the note part from action text */
 function extractNoteFromAction(text){
   if(!text)return'';
-  // PC Note added: <note>
   var m=text.match(/PC Note added:\s*(.+)/i);if(m)return m[1];
-  // FU updated — status: <status>
   m=text.match(/status:\s*(.+)/i);if(m)return m[1];
-  // Lost reason updated: <reason>
   m=text.match(/reason updated:\s*(.+)/i);if(m)return m[1];
-  // Value: ₹xxx or Advance: ₹xxx
   m=text.match(/(Value|Advance):\s*(₹.+)/i);if(m)return m[2];
   return'';
 }
 
-function logActivity(actionText,lead,extraNote){
+function logActivity(actionText,lead,extraNote,proofUrl){
   if(!currentRole)return;
   var now=new Date();
   var ts=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-  var row={log_date:today(),log_time:ts,doer_role:currentRole,lead_id:lead?lead.id:'',lead_name:lead?lead.name:'',lead_phone:lead?lead.phone:'',action_text:actionText,note_text:extraNote||extractNoteFromAction(actionText)};
+  var row={log_date:today(),log_time:ts,doer_role:currentRole,lead_id:lead?lead.id:'',lead_name:lead?lead.name:'',lead_phone:lead?lead.phone:'',action_text:actionText,note_text:extraNote||extractNoteFromAction(actionText),proof_url:proofUrl||''};
   sbFetch('/activity_log','POST',row).then(function(res){
     if(res&&res[0])activityLog.unshift(res[0]);
-    else activityLog.unshift(Object.assign({id:Date.now()},row));
+    else activityLog.unshift(Object.assign({id:'local'+Date.now()},row));
     var v=document.getElementById('view-activity');
     if(v&&v.classList.contains('active'))renderActivityLog();
-  }).catch(function(e){console.error('Activity log save failed',e);});
+  }).catch(function(e){
+    console.error('Activity log save failed',e);
+    // Still show it locally so the doer/owner sees it even if remote insert failed (e.g. missing proof_url column)
+    activityLog.unshift(Object.assign({id:'local'+Date.now()},row));
+    var v=document.getElementById('view-activity');
+    if(v&&v.classList.contains('active'))renderActivityLog();
+    showToast('⚠ Activity log sync issue — check Supabase "activity_log" table columns','e');
+  });
 }
 
 function loadActivityLog(){
@@ -845,7 +855,10 @@ function loadActivityLog(){
     activityLog=rows||[];
     var v=document.getElementById('view-activity');
     if(v&&v.classList.contains('active'))renderActivityLog();
-  }).catch(function(e){console.error('Activity log load failed',e);});
+  }).catch(function(e){
+    console.error('Activity log load failed',e);
+    showToast('⚠ Activity Log load failed. Check that Supabase table "activity_log" exists with columns: log_date, log_time, doer_role, lead_id, lead_name, lead_phone, action_text, note_text, proof_url','e');
+  });
 }
 
 function clearActDateFilter(){
@@ -882,12 +895,11 @@ function actRoleBadge(role){
 }
 
 function renderActivityLog(){
-  var from=document.getElementById('actDateFrom').value;
-  var to=document.getElementById('actDateTo').value;
-  var doer=document.getElementById('actDoerFilter').value;
-  var typeF=document.getElementById('actTypeFilter').value;
+  var fromEl=document.getElementById('actDateFrom'),toEl=document.getElementById('actDateTo'),doerEl=document.getElementById('actDoerFilter'),typeEl=document.getElementById('actTypeFilter');
+  if(!fromEl||!toEl||!doerEl||!typeEl)return;
+  var from=fromEl.value,to=toEl.value,doer=doerEl.value,typeF=typeEl.value;
 
-  var data=activityLog.filter(function(r){
+  var data=(activityLog||[]).filter(function(r){
     if(from&&r.log_date<from)return false;
     if(to&&r.log_date>to)return false;
     if(doer!=='All'&&r.doer_role!==doer)return false;
@@ -914,6 +926,9 @@ function renderActivityLog(){
     var noteHtml=noteText
       ?'<span class="act-note-chip has-note" title="'+escHtml(noteText)+'">'+escHtml(noteText.length>40?noteText.slice(0,40)+'…':noteText)+'</span>'
       :'<span style="color:var(--dim);font-size:10px">—</span>';
+    var proofHtml=(r.proof_url&&isValidUrl(r.proof_url))
+      ?'<a class="proof-link-chip" href="'+escHtml(r.proof_url)+'" target="_blank" rel="noopener">🔗 View Proof</a>'
+      :'<span style="color:var(--dim);font-size:10px">—</span>';
     return'<tr>'
     +'<td style="padding-left:16px;color:var(--dim);font-size:11px">'+(i+1)+'</td>'
     +'<td style="font-size:11px;color:var(--sub);white-space:nowrap">'+fmtDate(r.log_date)+'</td>'
@@ -923,8 +938,9 @@ function renderActivityLog(){
     +'<td style="font-size:11px;color:var(--sub)">'+(r.lead_phone||'—')+'</td>'
     +'<td>'+actTypeBadge(r.action_text)+'<span style="font-size:11px;color:var(--sub);margin-left:5px">'+escHtml(r.action_text)+'</span></td>'
     +'<td>'+noteHtml+'</td>'
+    +'<td>'+proofHtml+'</td>'
     +'</tr>';
-  }).join(''):'<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--dim)">📭 No activity found for selected filters</td></tr>';
+  }).join(''):'<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--dim)">📭 No activity found for selected filters</td></tr>';
 }
 /* ══ END ACTIVITY LOG ══ */
 
@@ -1001,13 +1017,10 @@ function openAdd(l){
   if(READ_ONLY.includes(currentRole)){showToast('⚠ View only','e');return;}
   editingId=l?l.id:null;
   document.getElementById('addTitle').innerHTML=l?'Edit <span>Lead</span>':'Add <span>New Lead</span>';
-  // Text-only fields
   ['name','phone','email','company','loc','exec','rem'].forEach(function(k){
     var el=document.getElementById('a-'+k);if(el)el.value=l?(l[k]||''):'';
   });
-  // Date
   var dEl=document.getElementById('a-date');if(dEl)dEl.value=l?(l.date||today()):today();
-  // Combo fields
   ['leadtype','req','src','budget','pri','timeline'].forEach(function(k){
     setComboVal(k,l?(l[k]||''):(k==='pri'?'Med':''));
   });
@@ -1065,10 +1078,18 @@ function savePipe(cb){
   }).catch(function(e){setSS('err','Save failed');showToast('Save failed','e');console.error(e);});
 }
 
-function buildFlow(l){var p=l.pipeline,stage=p.stage,c=document.getElementById('flowSteps');c.innerHTML='';var steps=[{key:'fu1',label:'Follow-up 1',icon:'📞',color:'var(--blue)',cbg:'var(--blue-bg)',delay:'Same day',methods:['SMS','Catalogue Share','WhatsApp','Phone Call','Email']},{key:'fu2',label:'Follow-up 2',icon:'📲',color:'var(--orange)',cbg:'var(--orange-bg)',delay:'+2 days',methods:['WhatsApp','Phone Call','Email','Video Call']},{key:'fu3',label:'Follow-up 3',icon:'🔔',color:'var(--purple)',cbg:'var(--purple-bg)',delay:'+7 days',methods:['WhatsApp','Phone Call','Email','Site Visit','In-Person Visit']}];steps.forEach(function(s,idx){var isDone=['fu2','fu3','meeting','quotation','advance','lost'].includes(stage)&&idx===0||['fu3','meeting','quotation','advance','lost'].includes(stage)&&idx===1||['meeting','quotation','advance','lost'].includes(stage)&&idx===2;var isActive=stage===s.key,isLocked=!isDone&&!isActive;var sd=p[s.key].actual&&p[s.key].planned?Math.ceil((new Date(p[s.key].actual)-new Date(p[s.key].planned))/86400000):null;var delBadge=sd===null?'<span class="delay-badge db-w">Pending</span>':sd===0?'<span class="delay-badge db-ok">✓ On time</span>':sd>0?'<span class="delay-badge db-late">+'+sd+'d late</span>':'<span class="delay-badge db-ok">'+Math.abs(sd)+'d early</span>';var chips=s.methods.map(function(m){var sel=(p[s.key].methods||[]).indexOf(m)>-1;return'<span class="mchip'+(sel?' sel':'')+'" onclick="toggleMethod(\''+s.key+'\',\''+m+'\',this)">'+m+'</span>';}).join('');var ro=READ_ONLY.includes(currentRole);var card=document.createElement('div');card.className='step-card'+(isActive?' active-step':'')+(isDone?' done-step':'')+(isLocked?' locked':'');if(isActive||isDone)card.classList.add('open');card.innerHTML='<div class="step-head" onclick="toggleStep(this)"><div class="shl"><div class="sicon" style="background:'+s.cbg+';color:'+s.color+'">'+s.icon+'</div><div><div class="step-num">'+s.key.toUpperCase()+' · '+s.delay+'</div><div class="step-name">'+s.label+'</div></div></div><div style="display:flex;align-items:center;gap:7px"><span class="ssb '+(isDone?'ssb-d':isActive?'ssb-a':'ssb-p')+'">'+(isDone?'✓ Done':isActive?'● Active':'○ Pending')+'</span><span class="chev">▾</span></div></div>'+'<div class="step-body">'+'<div style="margin-bottom:10px"><div class="fl" style="margin-bottom:5px">Contact Method Used</div><div class="mchips">'+chips+'</div></div>'+'<div class="sbrow">'+'<div class="fg"><label class="fl">Planned Date</label><input class="fi" type="date" id="pl-'+s.key+'" value="'+(p[s.key].planned||'')+'" '+(ro?'disabled':'')+'></div>'+'<div class="fg"><label class="fl">Actual Date</label><input class="fi" type="date" id="ac-'+s.key+'" value="'+(p[s.key].actual||'')+'" '+(ro?'disabled':'')+'></div>'+'<div class="fg"><label class="fl">Time Delay</label><div style="padding-top:7px">'+delBadge+'</div></div>'+'<div class="fg"><label class="fl">Status</label><select class="fs" id="st-'+s.key+'" '+(ro?'disabled':'')+'>'+'<option value="pending" '+(p[s.key].status==='pending'?'selected':'')+'>Pending</option>'+'<option value="done" '+(p[s.key].status==='done'?'selected':'')+'>Done</option>'+'<option value="no-answer" '+(p[s.key].status==='no-answer'?'selected':'')+'>No Answer</option>'+'<option value="callback" '+(p[s.key].status==='callback'?'selected':'')+'>Callback Requested</option>'+'<option value="busy" '+(p[s.key].status==='busy'?'selected':'')+'>Busy / Not Reachable</option>'+'</select></div></div>'+'<div class="sbrow full"><div class="fg"><label class="fl">Notes</label><input class="fi" id="nt-'+s.key+'" value="'+(p[s.key].notes||'').replace(/"/g,'&quot;')+'" placeholder="Key points..." '+(ro?'disabled':'')+'></div></div>'+(s.key==='fu3'?'<div style="margin-top:8px"><label class="fl">Client Next Date</label><input class="fi" type="date" id="cnd-fu3" value="'+(p.fu3.clientNextDate||'')+'" '+(ro?'disabled':'')+' style="max-width:200px;margin-top:5px"></div>':'')+(!ro&&isActive?'<div style="margin-top:10px"><button class="bp pri" style="width:100%" onclick="saveFUData(\''+s.key+'\')">💾 Save Changes</button></div>':'')+(isActive&&!ro?buildDecision(s.key,idx):'')+(isActive&&!ro?'<div class="lost-action-box"><div class="lost-action-text">❌ Mark as Lost?</div><button class="lost-action-btn" onclick="markLost()">Mark as Lost</button></div>':'')+'</div>';c.appendChild(card);if(idx<2&&!isLocked){var conn=document.createElement('div');conn.className='connector';conn.textContent='↓';c.appendChild(conn);}});
-if(['meeting','quotation','advance','lost'].includes(stage)){var conn2=document.createElement('div');conn2.className='connector';conn2.textContent='↓';c.appendChild(conn2);var isMA=stage==='meeting',ro=READ_ONLY.includes(currentRole);var mCard=document.createElement('div');mCard.className='step-card'+(isMA?' active-step':'')+(stage==='advance'?' done-step':'');if(isMA||stage==='advance')mCard.classList.add('open');mCard.innerHTML='<div class="step-head" onclick="toggleStep(this)"><div class="shl"><div class="sicon" style="background:var(--gold-bg);color:var(--gold)">🤝</div><div><div class="step-num">MEETING</div><div class="step-name">Client Meeting</div></div></div><div style="display:flex;align-items:center;gap:7px"><span class="ssb '+(stage==='advance'?'ssb-d':isMA?'ssb-a':'ssb-p')+'">'+(stage==='advance'?'✓ Done':isMA?'● Active':'○ Pending')+'</span><span class="chev">▾</span></div></div>'+'<div class="step-body"><div class="meet-sched-box"><div class="meet-sched-title">📅 Meeting Schedule</div>'+'<div class="sbrow two"><div class="fg"><label class="fl">Confirmed Date</label><input class="fi" type="date" id="meet-conf-date" value="'+(p.meeting.confirmedDate||'')+'" '+(ro?'disabled':'')+'></div><div class="fg"><label class="fl">Time</label><input class="fi" type="time" id="meet-conf-time" value="'+(p.meeting.confirmedTime||'')+'" '+(ro?'disabled':'')+'></div></div>'+'<div class="sbrow two"><div class="fg"><label class="fl">Location</label><input class="fi" id="meet-loc" value="'+(p.meeting.meetingLocation||'').replace(/"/g,'&quot;')+'" '+(ro?'disabled':'')+' placeholder="Office / Showroom..."></div>'+'<div class="fg"><label class="fl">Type</label><select class="fs" id="meet-type" '+(ro?'disabled':'')+'><option value="">Select...</option><option '+(p.meeting.meetingType==='Site Visit'?'selected':'')+'>Site Visit</option><option '+(p.meeting.meetingType==='Showroom Visit'?'selected':'')+'>Showroom Visit</option><option '+(p.meeting.meetingType==='Client Office'?'selected':'')+'>Client Office</option><option '+(p.meeting.meetingType==='Our Office'?'selected':'')+'>Our Office</option><option '+(p.meeting.meetingType==='Video Call'?'selected':'')+'>Video Call</option></select></div></div>'+'<div class="fg"><label class="fl">Attendees</label><input class="fi" id="meet-att" value="'+(p.meeting.attendees||'').replace(/"/g,'&quot;')+'" '+(ro?'disabled':'')+' placeholder="Who will attend..."></div></div>'+'<div class="sbrow three" style="margin-top:10px"><div class="fg"><label class="fl">Planned Date</label><input class="fi" type="date" id="meet-pl" value="'+(p.meeting.planned||'')+'" '+(ro?'disabled':'')+'></div><div class="fg"><label class="fl">Actual Date</label><input class="fi" type="date" id="meet-ac" value="'+(p.meeting.actual||'')+'" '+(ro?'disabled':'')+'></div><div class="fg"><label class="fl">Notes</label><input class="fi" id="meet-nt" value="'+(p.meeting.notes||'').replace(/"/g,'&quot;')+'" '+(ro?'disabled':'')+' placeholder="Agenda..."></div></div>'+(!ro&&isMA?'<div style="margin-top:10px"><button class="bp" style="width:100%;margin-bottom:8px" onclick="saveMeetingData()">💾 Save Meeting Details</button></div>':'')+(isMA&&!ro?'<div class="dec-box" style="border-color:rgba(200,147,10,.25)"><div class="dec-title">Meeting Outcome</div><div class="meet-result"><div class="mr-btn suc" onclick="meetingSuccess()"><div class="mr-icon">✅</div><div class="mr-lbl">Successful</div><div class="mr-sub">Move to Advance</div></div><div class="mr-btn fail" onclick="meetingFailed()"><div class="mr-icon">🔄</div><div class="mr-lbl">Not Successful</div><div class="mr-sub">Reschedule FU</div></div></div></div>':'')+(stage==='advance'?'<div style="padding:10px;background:var(--green-bg);border:1px solid rgba(5,150,105,.2);border-radius:8px;color:var(--green);font-size:12px;margin-top:10px">✅ Meeting Successful</div>':'')+(isMA&&!ro?'<div class="lost-action-box"><div class="lost-action-text">❌ Mark as Lost?</div><button class="lost-action-btn" onclick="markLost()">Mark as Lost</button></div>':'')+'</div>';c.appendChild(mCard);}
-if(['quotation','advance'].includes(stage)){var conn3=document.createElement('div');conn3.className='connector';conn3.textContent='↓';c.appendChild(conn3);var isQD=stage==='advance',ro=READ_ONLY.includes(currentRole);var qCard=document.createElement('div');qCard.className='step-card'+(stage==='quotation'?' active-step':'')+(isQD?' done-step':'');qCard.classList.add('open');qCard.innerHTML='<div class="step-head" onclick="toggleStep(this)"><div class="shl"><div class="sicon" style="background:var(--cyan-bg);color:var(--cyan)">📄</div><div><div class="step-num">QUOTATION</div><div class="step-name">Send Quotation</div></div></div><div style="display:flex;align-items:center;gap:7px"><span class="ssb '+(isQD?'ssb-d':stage==='quotation'?'ssb-a':'ssb-p')+'">'+(isQD?'✓ Sent':stage==='quotation'?'● Active':'○ Pending')+'</span><span class="chev">▾</span></div></div>'+'<div class="step-body"><div class="quot-box"><div class="quot-title">📄 Quotation Details</div>'+'<div class="sbrow"><div class="fg"><label class="fl">Quote Value (₹)</label><input class="fi" id="q-val" value="'+(p.quotation.value||'')+'" '+(ro?'disabled':'')+' placeholder="2,50,000"></div><div class="fg"><label class="fl">Sent Date</label><input class="fi" type="date" id="q-date" value="'+(p.quotation.sentDate||today())+'" '+(ro?'disabled':'')+'></div><div class="fg"><label class="fl">Ref No.</label><input class="fi" id="q-ref" value="'+(p.quotation.ref||'')+'" '+(ro?'disabled':'')+' placeholder="QT-001"></div><div class="fg"><label class="fl">Response</label><input class="fi" id="q-nt" value="'+(p.quotation.notes||'').replace(/"/g,'&quot;')+'" '+(ro?'disabled':'')+' placeholder="Accepted / Negotiating..."></div></div>'+(!ro&&stage==='quotation'?'<div style="margin-top:8px;display:flex;gap:8px"><button class="bp" onclick="saveQuotData()">💾 Save Quotation</button><button class="bp pri" onclick="markQuotDone()">✓ Accepted → Move to Advance</button></div>':'')+(stage==='quotation'&&!ro?'<div class="lost-action-box" style="margin-top:8px"><div class="lost-action-text">❌ Mark as Lost?</div><button class="lost-action-btn" onclick="markLost()">Mark as Lost</button></div>':'')+'</div></div>';c.appendChild(qCard);}
-if(stage==='advance'){var conn4=document.createElement('div');conn4.className='connector';conn4.textContent='↓';c.appendChild(conn4);var ro=READ_ONLY.includes(currentRole);var aCard=document.createElement('div');aCard.className='step-card active-step done-step open';aCard.innerHTML='<div class="step-head" onclick="toggleStep(this)"><div class="shl"><div class="sicon" style="background:var(--green-bg);color:var(--green)">💰</div><div><div class="step-num">FINAL STAGE</div><div class="step-name">Advance Received 🎉</div></div></div><div style="display:flex;align-items:center;gap:7px"><span class="ssb ssb-d">✓ CONVERTED</span><span class="chev">▾</span></div></div>'+'<div class="step-body"><div class="adv-box"><div class="adv-title">💰 Order Details</div>'+'<div class="sbrow three"><div class="fg"><label class="fl">Advance Amount (₹)</label><input class="fi" id="adv-amt" value="'+(p.advance.amount||'')+'" '+(ro?'disabled':'')+' placeholder="50,000"></div><div class="fg"><label class="fl">Payment Date</label><input class="fi" type="date" id="adv-date" value="'+(p.advance.date||today())+'" '+(ro?'disabled':'')+'></div><div class="fg"><label class="fl">Total Value (₹)</label><input class="fi" id="adv-rev" value="'+(p.advance.revenue||'')+'" '+(ro?'disabled':'')+' placeholder="Total value"></div></div>'+'<div class="fg" style="margin-top:8px"><label class="fl">Notes</label><input class="fi" id="adv-nt" value="'+(p.advance.notes||'').replace(/"/g,'&quot;')+'" '+(ro?'disabled':'')+' placeholder="Payment mode, delivery..."></div>'+(!ro?'<div style="margin-top:8px"><button class="bp" onclick="saveAdvData()">💾 Save Order Details</button></div>':'')+'</div></div>';c.appendChild(aCard);}
+function proofField(idPrefix,val,ro){
+  var v=val||'';
+  return '<div class="fg" style="margin-top:8px"><label class="fl">📎 Proof (Google Drive Link)</label>'
+    +'<input class="fi" id="'+idPrefix+'" placeholder="https://drive.google.com/..." value="'+escHtml(v).replace(/"/g,'&quot;')+'" '+(ro?'disabled':'')+'>'
+    +(v&&isValidUrl(v)?'<div style="margin-top:5px"><a href="'+escHtml(v)+'" target="_blank" rel="noopener" class="proof-link-chip">🔗 Open Proof</a></div>':'<div class="combo-hint">Client message screenshot, quotation photo, payment receipt, etc. — Google Drive link paste karein</div>')
+    +'</div>';
+}
+
+function buildFlow(l){var p=l.pipeline,stage=p.stage,c=document.getElementById('flowSteps');c.innerHTML='';var steps=[{key:'fu1',label:'Follow-up 1',icon:'📞',color:'var(--blue)',cbg:'var(--blue-bg)',delay:'Same day',methods:['SMS','Catalogue Share','WhatsApp','Phone Call','Email']},{key:'fu2',label:'Follow-up 2',icon:'📲',color:'var(--orange)',cbg:'var(--orange-bg)',delay:'+2 days',methods:['WhatsApp','Phone Call','Email','Video Call']},{key:'fu3',label:'Follow-up 3',icon:'🔔',color:'var(--purple)',cbg:'var(--purple-bg)',delay:'+7 days',methods:['WhatsApp','Phone Call','Email','Site Visit','In-Person Visit']}];steps.forEach(function(s,idx){var isDone=['fu2','fu3','meeting','quotation','advance','lost'].includes(stage)&&idx===0||['fu3','meeting','quotation','advance','lost'].includes(stage)&&idx===1||['meeting','quotation','advance','lost'].includes(stage)&&idx===2;var isActive=stage===s.key,isLocked=!isDone&&!isActive;var sd=p[s.key].actual&&p[s.key].planned?Math.ceil((new Date(p[s.key].actual)-new Date(p[s.key].planned))/86400000):null;var delBadge=sd===null?'<span class="delay-badge db-w">Pending</span>':sd===0?'<span class="delay-badge db-ok">✓ On time</span>':sd>0?'<span class="delay-badge db-late">+'+sd+'d late</span>':'<span class="delay-badge db-ok">'+Math.abs(sd)+'d early</span>';var chips=s.methods.map(function(m){var sel=(p[s.key].methods||[]).indexOf(m)>-1;return'<span class="mchip'+(sel?' sel':'')+'" onclick="toggleMethod(\''+s.key+'\',\''+m+'\',this)">'+m+'</span>';}).join('');var ro=READ_ONLY.includes(currentRole);var card=document.createElement('div');card.className='step-card'+(isActive?' active-step':'')+(isDone?' done-step':'')+(isLocked?' locked':'');if(isActive||isDone)card.classList.add('open');card.innerHTML='<div class="step-head" onclick="toggleStep(this)"><div class="shl"><div class="sicon" style="background:'+s.cbg+';color:'+s.color+'">'+s.icon+'</div><div><div class="step-num">'+s.key.toUpperCase()+' · '+s.delay+'</div><div class="step-name">'+s.label+'</div></div></div><div style="display:flex;align-items:center;gap:7px"><span class="ssb '+(isDone?'ssb-d':isActive?'ssb-a':'ssb-p')+'">'+(isDone?'✓ Done':isActive?'● Active':'○ Pending')+'</span><span class="chev">▾</span></div></div>'+'<div class="step-body">'+'<div style="margin-bottom:10px"><div class="fl" style="margin-bottom:5px">Contact Method Used</div><div class="mchips">'+chips+'</div></div>'+'<div class="sbrow">'+'<div class="fg"><label class="fl">Planned Date</label><input class="fi" type="date" id="pl-'+s.key+'" value="'+(p[s.key].planned||'')+'" '+(ro?'disabled':'')+'></div>'+'<div class="fg"><label class="fl">Actual Date</label><input class="fi" type="date" id="ac-'+s.key+'" value="'+(p[s.key].actual||'')+'" '+(ro?'disabled':'')+'></div>'+'<div class="fg"><label class="fl">Time Delay</label><div style="padding-top:7px">'+delBadge+'</div></div>'+'<div class="fg"><label class="fl">Status</label><select class="fs" id="st-'+s.key+'" '+(ro?'disabled':'')+'>'+'<option value="pending" '+(p[s.key].status==='pending'?'selected':'')+'>Pending</option>'+'<option value="done" '+(p[s.key].status==='done'?'selected':'')+'>Done</option>'+'<option value="no-answer" '+(p[s.key].status==='no-answer'?'selected':'')+'>No Answer</option>'+'<option value="callback" '+(p[s.key].status==='callback'?'selected':'')+'>Callback Requested</option>'+'<option value="busy" '+(p[s.key].status==='busy'?'selected':'')+'>Busy / Not Reachable</option>'+'</select></div></div>'+'<div class="sbrow full"><div class="fg"><label class="fl">Notes</label><input class="fi" id="nt-'+s.key+'" value="'+(p[s.key].notes||'').replace(/"/g,'&quot;')+'" placeholder="Key points..." '+(ro?'disabled':'')+'></div></div>'+proofField('pf-'+s.key,p[s.key].proof,ro)+(s.key==='fu3'?'<div style="margin-top:8px"><label class="fl">Client Next Date</label><input class="fi" type="date" id="cnd-fu3" value="'+(p.fu3.clientNextDate||'')+'" '+(ro?'disabled':'')+' style="max-width:200px;margin-top:5px"></div>':'')+(!ro&&isActive?'<div style="margin-top:10px"><button class="bp pri" style="width:100%" onclick="saveFUData(\''+s.key+'\')">💾 Save Changes</button></div>':'')+(isActive&&!ro?buildDecision(s.key,idx):'')+(isActive&&!ro?'<div class="lost-action-box"><div class="lost-action-text">❌ Mark as Lost?</div><button class="lost-action-btn" onclick="markLost()">Mark as Lost</button></div>':'')+'</div>';c.appendChild(card);if(idx<2&&!isLocked){var conn=document.createElement('div');conn.className='connector';conn.textContent='↓';c.appendChild(conn);}});
+if(['meeting','quotation','advance','lost'].includes(stage)){var conn2=document.createElement('div');conn2.className='connector';conn2.textContent='↓';c.appendChild(conn2);var isMA=stage==='meeting',ro=READ_ONLY.includes(currentRole);var mCard=document.createElement('div');mCard.className='step-card'+(isMA?' active-step':'')+(stage==='advance'?' done-step':'');if(isMA||stage==='advance')mCard.classList.add('open');mCard.innerHTML='<div class="step-head" onclick="toggleStep(this)"><div class="shl"><div class="sicon" style="background:var(--gold-bg);color:var(--gold)">🤝</div><div><div class="step-num">MEETING</div><div class="step-name">Client Meeting</div></div></div><div style="display:flex;align-items:center;gap:7px"><span class="ssb '+(stage==='advance'?'ssb-d':isMA?'ssb-a':'ssb-p')+'">'+(stage==='advance'?'✓ Done':isMA?'● Active':'○ Pending')+'</span><span class="chev">▾</span></div></div>'+'<div class="step-body"><div class="meet-sched-box"><div class="meet-sched-title">📅 Meeting Schedule</div>'+'<div class="sbrow two"><div class="fg"><label class="fl">Confirmed Date</label><input class="fi" type="date" id="meet-conf-date" value="'+(p.meeting.confirmedDate||'')+'" '+(ro?'disabled':'')+'></div><div class="fg"><label class="fl">Time</label><input class="fi" type="time" id="meet-conf-time" value="'+(p.meeting.confirmedTime||'')+'" '+(ro?'disabled':'')+'></div></div>'+'<div class="sbrow two"><div class="fg"><label class="fl">Location</label><input class="fi" id="meet-loc" value="'+(p.meeting.meetingLocation||'').replace(/"/g,'&quot;')+'" '+(ro?'disabled':'')+' placeholder="Office / Showroom..."></div>'+'<div class="fg"><label class="fl">Type</label><select class="fs" id="meet-type" '+(ro?'disabled':'')+'><option value="">Select...</option><option '+(p.meeting.meetingType==='Site Visit'?'selected':'')+'>Site Visit</option><option '+(p.meeting.meetingType==='Showroom Visit'?'selected':'')+'>Showroom Visit</option><option '+(p.meeting.meetingType==='Client Office'?'selected':'')+'>Client Office</option><option '+(p.meeting.meetingType==='Our Office'?'selected':'')+'>Our Office</option><option '+(p.meeting.meetingType==='Video Call'?'selected':'')+'>Video Call</option></select></div></div>'+'<div class="fg"><label class="fl">Attendees</label><input class="fi" id="meet-att" value="'+(p.meeting.attendees||'').replace(/"/g,'&quot;')+'" '+(ro?'disabled':'')+' placeholder="Who will attend..."></div></div>'+'<div class="sbrow three" style="margin-top:10px"><div class="fg"><label class="fl">Planned Date</label><input class="fi" type="date" id="meet-pl" value="'+(p.meeting.planned||'')+'" '+(ro?'disabled':'')+'></div><div class="fg"><label class="fl">Actual Date</label><input class="fi" type="date" id="meet-ac" value="'+(p.meeting.actual||'')+'" '+(ro?'disabled':'')+'></div><div class="fg"><label class="fl">Notes</label><input class="fi" id="meet-nt" value="'+(p.meeting.notes||'').replace(/"/g,'&quot;')+'" '+(ro?'disabled':'')+' placeholder="Agenda..."></div></div>'+proofField('pf-meeting',p.meeting.proof,ro)+(!ro&&isMA?'<div style="margin-top:10px"><button class="bp" style="width:100%;margin-bottom:8px" onclick="saveMeetingData()">💾 Save Meeting Details</button></div>':'')+(isMA&&!ro?'<div class="dec-box" style="border-color:rgba(200,147,10,.25)"><div class="dec-title">Meeting Outcome</div><div class="meet-result"><div class="mr-btn suc" onclick="meetingSuccess()"><div class="mr-icon">✅</div><div class="mr-lbl">Successful</div><div class="mr-sub">Move to Advance</div></div><div class="mr-btn fail" onclick="meetingFailed()"><div class="mr-icon">🔄</div><div class="mr-lbl">Not Successful</div><div class="mr-sub">Reschedule FU</div></div></div></div>':'')+(stage==='advance'?'<div style="padding:10px;background:var(--green-bg);border:1px solid rgba(5,150,105,.2);border-radius:8px;color:var(--green);font-size:12px;margin-top:10px">✅ Meeting Successful</div>':'')+(isMA&&!ro?'<div class="lost-action-box"><div class="lost-action-text">❌ Mark as Lost?</div><button class="lost-action-btn" onclick="markLost()">Mark as Lost</button></div>':'')+'</div>';c.appendChild(mCard);}
+if(['quotation','advance'].includes(stage)){var conn3=document.createElement('div');conn3.className='connector';conn3.textContent='↓';c.appendChild(conn3);var isQD=stage==='advance',ro=READ_ONLY.includes(currentRole);var qCard=document.createElement('div');qCard.className='step-card'+(stage==='quotation'?' active-step':'')+(isQD?' done-step':'');qCard.classList.add('open');qCard.innerHTML='<div class="step-head" onclick="toggleStep(this)"><div class="shl"><div class="sicon" style="background:var(--cyan-bg);color:var(--cyan)">📄</div><div><div class="step-num">QUOTATION</div><div class="step-name">Send Quotation</div></div></div><div style="display:flex;align-items:center;gap:7px"><span class="ssb '+(isQD?'ssb-d':stage==='quotation'?'ssb-a':'ssb-p')+'">'+(isQD?'✓ Sent':stage==='quotation'?'● Active':'○ Pending')+'</span><span class="chev">▾</span></div></div>'+'<div class="step-body"><div class="quot-box"><div class="quot-title">📄 Quotation Details</div>'+'<div class="sbrow"><div class="fg"><label class="fl">Quote Value (₹)</label><input class="fi" id="q-val" value="'+(p.quotation.value||'')+'" '+(ro?'disabled':'')+' placeholder="2,50,000"></div><div class="fg"><label class="fl">Sent Date</label><input class="fi" type="date" id="q-date" value="'+(p.quotation.sentDate||today())+'" '+(ro?'disabled':'')+'></div><div class="fg"><label class="fl">Ref No.</label><input class="fi" id="q-ref" value="'+(p.quotation.ref||'')+'" '+(ro?'disabled':'')+' placeholder="QT-001"></div><div class="fg"><label class="fl">Response</label><input class="fi" id="q-nt" value="'+(p.quotation.notes||'').replace(/"/g,'&quot;')+'" '+(ro?'disabled':'')+' placeholder="Accepted / Negotiating..."></div></div>'+proofField('pf-quotation',p.quotation.proof,ro)+(!ro&&stage==='quotation'?'<div style="margin-top:8px;display:flex;gap:8px"><button class="bp" onclick="saveQuotData()">💾 Save Quotation</button><button class="bp pri" onclick="markQuotDone()">✓ Accepted → Move to Advance</button></div>':'')+(stage==='quotation'&&!ro?'<div class="lost-action-box" style="margin-top:8px"><div class="lost-action-text">❌ Mark as Lost?</div><button class="lost-action-btn" onclick="markLost()">Mark as Lost</button></div>':'')+'</div></div>';c.appendChild(qCard);}
+if(stage==='advance'){var conn4=document.createElement('div');conn4.className='connector';conn4.textContent='↓';c.appendChild(conn4);var ro=READ_ONLY.includes(currentRole);var aCard=document.createElement('div');aCard.className='step-card active-step done-step open';aCard.innerHTML='<div class="step-head" onclick="toggleStep(this)"><div class="shl"><div class="sicon" style="background:var(--green-bg);color:var(--green)">💰</div><div><div class="step-num">FINAL STAGE</div><div class="step-name">Advance Received 🎉</div></div></div><div style="display:flex;align-items:center;gap:7px"><span class="ssb ssb-d">✓ CONVERTED</span><span class="chev">▾</span></div></div>'+'<div class="step-body"><div class="adv-box"><div class="adv-title">💰 Order Details</div>'+'<div class="sbrow three"><div class="fg"><label class="fl">Advance Amount (₹)</label><input class="fi" id="adv-amt" value="'+(p.advance.amount||'')+'" '+(ro?'disabled':'')+' placeholder="50,000"></div><div class="fg"><label class="fl">Payment Date</label><input class="fi" type="date" id="adv-date" value="'+(p.advance.date||today())+'" '+(ro?'disabled':'')+'></div><div class="fg"><label class="fl">Total Value (₹)</label><input class="fi" id="adv-rev" value="'+(p.advance.revenue||'')+'" '+(ro?'disabled':'')+' placeholder="Total value"></div></div>'+'<div class="fg" style="margin-top:8px"><label class="fl">Notes</label><input class="fi" id="adv-nt" value="'+(p.advance.notes||'').replace(/"/g,'&quot;')+'" '+(ro?'disabled':'')+' placeholder="Payment mode, delivery..."></div>'+proofField('pf-advance',p.advance.proof,ro)+(!ro?'<div style="margin-top:8px"><button class="bp" onclick="saveAdvData()">💾 Save Order Details</button></div>':'')+'</div></div>';c.appendChild(aCard);}
 if(stage==='lost'){var conn5=document.createElement('div');conn5.className='connector';conn5.textContent='↓';c.appendChild(conn5);var ro=READ_ONLY.includes(currentRole);var lCard=document.createElement('div');lCard.className='step-card done-step open';lCard.style.borderColor='rgba(220,38,38,.3)';lCard.innerHTML='<div class="step-head" onclick="toggleStep(this)"><div class="shl"><div class="sicon" style="background:var(--red-bg);color:var(--red)">❌</div><div><div class="step-num">LOST</div><div class="step-name">Lead Not Converted</div></div></div><div style="display:flex;align-items:center;gap:7px"><span class="ssb ssb-s">✗ Lost</span><span class="chev">▾</span></div></div>'+'<div class="step-body"><div style="background:var(--red-bg);border:1.5px solid rgba(220,38,38,.2);border-radius:10px;padding:14px">'+'<div class="sbrow two"><div class="fg"><label class="fl">Reason</label><select class="fs" id="lost-r" '+(ro?'disabled':'')+'><option value="">Select...</option><option '+(p.lostReason==='Price too high'?'selected':'')+'>Price too high</option><option '+(p.lostReason==='Went to competitor'?'selected':'')+'>Went to competitor</option><option '+(p.lostReason==='Not ready to proceed'?'selected':'')+'>Not ready to proceed</option><option '+(p.lostReason==='No response'?'selected':'')+'>No response</option><option '+(p.lostReason==='Budget constraint'?'selected':'')+'>Budget constraint</option><option '+(p.lostReason==='Project cancelled'?'selected':'')+'>Project cancelled</option><option '+(p.lostReason==='Other'?'selected':'')+'>Other</option></select></div>'+'<div class="fg"><label class="fl">Lost Date</label><input class="fi" type="date" id="lost-d" value="'+(p.lostDate||today())+'" '+(ro?'disabled':'')+'></div></div>'+(!ro?'<div style="display:flex;gap:8px;margin-top:8px"><button class="bp" onclick="saveLostData()">💾 Save</button><button class="bp" style="background:var(--orange);color:#fff" onclick="reactivate()">♻ Re-activate</button></div>':'')+'</div></div>';c.appendChild(lCard);}
 }
 
@@ -1079,15 +1100,18 @@ function showNFD(key){var el=document.getElementById('nfd-box-'+key);if(el)el.st
 
 function saveFUData(k){
   var l=getLead();if(!l)return;
-  var acEl=document.getElementById('ac-'+k),plEl=document.getElementById('pl-'+k),stEl=document.getElementById('st-'+k),ntEl=document.getElementById('nt-'+k);
+  var acEl=document.getElementById('ac-'+k),plEl=document.getElementById('pl-'+k),stEl=document.getElementById('st-'+k),ntEl=document.getElementById('nt-'+k),pfEl=document.getElementById('pf-'+k);
   if(plEl&&plEl.value)l.pipeline[k].planned=plEl.value;
   if(acEl&&acEl.value)l.pipeline[k].actual=acEl.value;
   if(stEl)l.pipeline[k].status=stEl.value||'pending';
   if(ntEl)l.pipeline[k].notes=ntEl.value;
+  var proofChanged=false,proofVal='';
+  if(pfEl){proofVal=pfEl.value.trim();if(proofVal&&!isValidUrl(proofVal)){showToast('⚠ Proof must be a valid link (https://...)','e');return;}if(proofVal!==(l.pipeline[k].proof||'')){proofChanged=true;}l.pipeline[k].proof=proofVal;}
   if(k==='fu3'){var cn=document.getElementById('cnd-fu3');if(cn)l.pipeline.fu3.clientNextDate=cn.value;}
   savePipe(function(){
     showToast('✓ Saved','s');
     logActivity(k.toUpperCase()+' updated — status: '+(l.pipeline[k].status||'pending'),l);
+    if(proofChanged&&proofVal){logActivity('Proof added for '+stageLabel(k),l,'Proof: '+proofVal,proofVal);}
     openPipeline(viewingId);
   });
 }
@@ -1098,11 +1122,12 @@ function confirmNFU(key){
   var nd=ndEl?ndEl.value:'';
   if(!nd){showToast('Please select a date','e');return;}
   var nm={fu1:'fu2',fu2:'fu3'}[key];if(!nm)return;
-  var acEl=document.getElementById('ac-'+key),plEl=document.getElementById('pl-'+key),stEl=document.getElementById('st-'+key),ntEl=document.getElementById('nt-'+key);
+  var acEl=document.getElementById('ac-'+key),plEl=document.getElementById('pl-'+key),stEl=document.getElementById('st-'+key),ntEl=document.getElementById('nt-'+key),pfEl=document.getElementById('pf-'+key);
   if(plEl&&plEl.value)l.pipeline[key].planned=plEl.value;
   l.pipeline[key].actual=(acEl&&acEl.value)?acEl.value:today();
   l.pipeline[key].status='done';
   if(ntEl)l.pipeline[key].notes=ntEl.value;
+  if(pfEl)l.pipeline[key].proof=pfEl.value.trim();
   l.pipeline[nm].planned=nd;
   l.pipeline[nm].status='pending';
   l.pipeline[nm].actual='';
@@ -1164,6 +1189,7 @@ function meetingSuccess(){
   l.pipeline.meeting.actual=(acEl&&acEl.value)?acEl.value:today();
   l.pipeline.meeting.result='success';
   var ntEl=document.getElementById('meet-nt');if(ntEl)l.pipeline.meeting.notes=ntEl.value;
+  var pfEl=document.getElementById('pf-meeting');if(pfEl)l.pipeline.meeting.proof=pfEl.value.trim();
   l.pipeline.stage='advance';
   savePipe(function(){
     buildAll();
@@ -1177,6 +1203,7 @@ function meetingFailed(){
   var l=getLead();if(!l)return;
   l.pipeline.meeting.result='fail';
   var ntEl=document.getElementById('meet-nt');if(ntEl)l.pipeline.meeting.notes=ntEl.value;
+  var pfEl=document.getElementById('pf-meeting');if(pfEl)l.pipeline.meeting.proof=pfEl.value.trim();
   l.pipeline.stage='fu3';
   l.pipeline.fu3.planned=addDays(today(),3);
   l.pipeline.fu3.status='pending';
@@ -1192,8 +1219,11 @@ function saveMeetingData(){
   var l=getLead();if(!l)return;
   var flds={confirmedDate:'meet-conf-date',confirmedTime:'meet-conf-time',meetingLocation:'meet-loc',meetingType:'meet-type',attendees:'meet-att',planned:'meet-pl',actual:'meet-ac',notes:'meet-nt'};
   Object.keys(flds).forEach(function(k){var el=document.getElementById(flds[k]);if(el)l.pipeline.meeting[k]=el.value;});
+  var pfEl=document.getElementById('pf-meeting'),proofChanged=false,proofVal='';
+  if(pfEl){proofVal=pfEl.value.trim();if(proofVal&&!isValidUrl(proofVal)){showToast('⚠ Proof must be a valid link (https://...)','e');return;}if(proofVal!==(l.pipeline.meeting.proof||''))proofChanged=true;l.pipeline.meeting.proof=proofVal;}
   savePipe(function(){
     logActivity('Meeting details updated',l);
+    if(proofChanged&&proofVal){logActivity('Proof added for Meeting',l,'Proof: '+proofVal,proofVal);}
     showToast('✓ Meeting saved','s');
     openPipeline(viewingId);
   });
@@ -1202,8 +1232,11 @@ function saveMeetingData(){
 function saveQuotData(){
   var l=getLead();if(!l)return;
   ['value','sentDate','ref','notes'].forEach(function(k,i){var el=document.getElementById(['q-val','q-date','q-ref','q-nt'][i]);if(el)l.pipeline.quotation[k]=el.value;});
+  var pfEl=document.getElementById('pf-quotation'),proofChanged=false,proofVal='';
+  if(pfEl){proofVal=pfEl.value.trim();if(proofVal&&!isValidUrl(proofVal)){showToast('⚠ Proof must be a valid link (https://...)','e');return;}if(proofVal!==(l.pipeline.quotation.proof||''))proofChanged=true;l.pipeline.quotation.proof=proofVal;}
   savePipe(function(){
     logActivity('Quotation details saved — Value: ₹'+(l.pipeline.quotation.value||'—'),l);
+    if(proofChanged&&proofVal){logActivity('Proof added for Quotation',l,'Proof: '+proofVal,proofVal);}
     showToast('✓ Quotation saved','s');
     openPipeline(viewingId);
   });
@@ -1212,6 +1245,7 @@ function saveQuotData(){
 function markQuotDone(){
   var l=getLead();if(!l)return;
   ['value','sentDate','ref','notes'].forEach(function(k,i){var el=document.getElementById(['q-val','q-date','q-ref','q-nt'][i]);if(el)l.pipeline.quotation[k]=el.value;});
+  var pfEl=document.getElementById('pf-quotation');if(pfEl)l.pipeline.quotation.proof=pfEl.value.trim();
   l.pipeline.stage='advance';
   savePipe(function(){
     buildAll();
@@ -1228,8 +1262,11 @@ function saveAdvData(){
   if(el2)l.pipeline.advance.date=el2.value;
   if(el3)l.pipeline.advance.revenue=el3.value;
   if(el4)l.pipeline.advance.notes=el4.value;
+  var pfEl=document.getElementById('pf-advance'),proofChanged=false,proofVal='';
+  if(pfEl){proofVal=pfEl.value.trim();if(proofVal&&!isValidUrl(proofVal)){showToast('⚠ Proof must be a valid link (https://...)','e');return;}if(proofVal!==(l.pipeline.advance.proof||''))proofChanged=true;l.pipeline.advance.proof=proofVal;}
   savePipe(function(){
     logActivity('Order details saved — Advance: ₹'+(l.pipeline.advance.amount||'—'),l);
+    if(proofChanged&&proofVal){logActivity('Proof added for Advance/Order',l,'Proof: '+proofVal,proofVal);}
     showToast('✓ Order saved','s');
     openPipeline(viewingId);
   });
@@ -1333,4 +1370,4 @@ window.onload=function(){
 };
 </script>
 </body>
-</html>
+</html>\
