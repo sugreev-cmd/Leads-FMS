@@ -1102,14 +1102,16 @@ function saveFUData(k){
   if(plEl&&plEl.value)l.pipeline[k].planned=plEl.value;
   if(acEl&&acEl.value)l.pipeline[k].actual=acEl.value;
   if(stEl)l.pipeline[k].status=stEl.value||'pending';
+  var noteVal=ntEl?ntEl.value.trim():'';
   if(ntEl)l.pipeline[k].notes=ntEl.value;
-  var proofChanged=false,proofVal='';
-  if(pfEl){proofVal=pfEl.value.trim();if(proofVal&&!isValidUrl(proofVal)){showToast('⚠ Proof must be a valid link (https://...)','e');return;}if(proofVal!==(l.pipeline[k].proof||'')){proofChanged=true;}l.pipeline[k].proof=proofVal;}
+  var proofVal='';
+  if(pfEl){proofVal=pfEl.value.trim();if(proofVal&&!isValidUrl(proofVal)){showToast('⚠ Proof must be a valid link (https://...)','e');return;}l.pipeline[k].proof=proofVal;}
   if(k==='fu3'){var cn=document.getElementById('cnd-fu3');if(cn)l.pipeline.fu3.clientNextDate=cn.value;}
   savePipe(function(){
     showToast('✓ Saved','s');
-    logActivity(k.toUpperCase()+' updated — status: '+(l.pipeline[k].status||'pending'),l);
-    if(proofChanged&&proofVal){logActivity('Proof added for '+stageLabel(k),l,'Proof: '+proofVal,proofVal);}
+    // ONE combined activity log entry: status + actual note text + proof link (if any) together
+    var logNote=(noteVal?noteVal:'status: '+(l.pipeline[k].status||'pending'));
+    logActivity(stageLabel(k)+' updated'+(proofVal?' (with proof)':''),l,logNote,proofVal);
     openPipeline(viewingId);
   });
 }
@@ -1368,4 +1370,4 @@ window.onload=function(){
 };
 </script>
 </body>
-</html>\
+</html>
