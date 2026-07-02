@@ -285,9 +285,11 @@ td{padding:10px 12px;vertical-align:middle}
 .pc-note-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}.pc-note-item:last-child{border-bottom:none;padding-bottom:0}
 .pc-note-time{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);flex-shrink:0;padding-top:2px;white-space:nowrap}
 .pc-note-text{font-size:12px;color:var(--text);line-height:1.5;flex:1}
-.pc-note-add{display:flex;gap:8px;margin-top:10px}
-.pc-note-add input{flex:1;padding:9px 12px;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;font-size:12px;color:var(--text);outline:none;font-family:'Outfit',sans-serif}
+.pc-note-add{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.pc-note-add input[type=text]{flex:2;min-width:160px;padding:9px 12px;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;font-size:12px;color:var(--text);outline:none;font-family:'Outfit',sans-serif}
+.pc-note-add input.pc-proof-inp{flex:1.5;min-width:160px;padding:9px 12px;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;font-size:12px;color:var(--text);outline:none;font-family:'Outfit',sans-serif}
 .pc-note-add button{padding:9px 16px;background:var(--blue);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.pc-note-proof{margin-top:4px}
 .loading-overlay{position:fixed;inset:0;background:rgba(26,35,64,.6);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
 .loading-box{background:#fff;border-radius:16px;padding:32px 40px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);}
 .loading-spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
@@ -514,7 +516,7 @@ td{padding:10px 12px;vertical-align:middle}
               <option value="add">➕ Lead Added</option>
               <option value="stage">🔄 Stage Change</option>
               <option value="note">📝 Note Added</option>
-              <option value="proof">📎 Proof Added</option>
+              <option value="proof">📎 Has Proof</option>
               <option value="update">✏️ Details Updated</option>
             </select>
           </div>
@@ -781,7 +783,7 @@ function loadData(){
     return sbFetch('/pc_notes?order=created_at.asc','GET');
   }).then(function(notes){
     pcNotes={};
-    (notes||[]).forEach(function(n){var key=n.lead_id+'_'+n.stage;if(!pcNotes[key])pcNotes[key]=[];pcNotes[key].push({text:n.note_text,ts:n.note_ts,by:n.note_by,dbId:n.id});});
+    (notes||[]).forEach(function(n){var key=n.lead_id+'_'+n.stage;if(!pcNotes[key])pcNotes[key]=[];pcNotes[key].push({text:n.note_text,ts:n.note_ts,by:n.note_by,proof:n.note_proof||'',dbId:n.id});});
     setSS('saved','✓ Synced');
     buildAll();
     loadActivityLog();
@@ -790,7 +792,11 @@ function loadData(){
 
 function saveLead_db(lead,cb){setSS('saving','Saving...');var row={id:lead.id,name:lead.name,phone:lead.phone,email:lead.email||'',company:lead.company||'',req:lead.req||'',src:lead.src||'',loc:lead.loc||'',exec:lead.exec||'',assigned_role:lead.assigned_role||currentRole,budget:lead.budget||'',pri:lead.pri||'Med',date:lead.date||today(),rem:lead.rem||'',leadtype:lead.leadtype||'Direct Client',timeline:lead.timeline||'',pipeline:lead.pipeline,updated_at:new Date().toISOString()};sbFetch('/leads?on_conflict=id','POST',row).then(function(){setSS('saved','✓ Saved');if(typeof cb==='function')cb(null);}).catch(function(e){sbFetch('/leads?id=eq.'+lead.id,'PATCH',row).then(function(){setSS('saved','✓ Saved');if(typeof cb==='function')cb(null);}).catch(function(e2){setSS('err','Save failed');if(typeof cb==='function')cb(e2);});});}
 function deleteLead_db(id,cb){setSS('saving','Deleting...');sbFetch('/leads?id=eq.'+id,'DELETE').then(function(){setSS('saved','✓ Synced');if(typeof cb==='function')cb(null);}).catch(function(e){setSS('err','Delete failed');if(typeof cb==='function')cb(e);});}
-function savePCNote_db(leadId,stage,noteText,noteBy,noteTs,cb){var row={lead_id:leadId,stage:stage,note_text:noteText,note_by:noteBy,note_ts:noteTs};sbFetch('/pc_notes','POST',row).then(function(res){if(typeof cb==='function')cb(null,res);}).catch(function(e){if(typeof cb==='function')cb(e);});}
+function savePCNote_db(leadId,stage,noteText,noteBy,noteTs,proofUrl,cb){var row={lead_id:leadId,stage:stage,note_text:noteText,note_by:noteBy,note_ts:noteTs,note_proof:proofUrl||''};sbFetch('/pc_notes','POST',row).then(function(res){if(typeof cb==='function')cb(null,res);}).catch(function(e){
+  // Retry without note_proof in case the column doesn't exist yet in Supabase
+  var row2={lead_id:leadId,stage:stage,note_text:noteText,note_by:noteBy,note_ts:noteTs};
+  sbFetch('/pc_notes','POST',row2).then(function(res2){if(typeof cb==='function')cb(null,res2);}).catch(function(e2){if(typeof cb==='function')cb(e2);});
+});}
 function setSS(s,t){var d=document.getElementById('syncDot'),tx=document.getElementById('syncTxt');d.className='sync-dot '+s;tx.textContent=t;}
 function buildAll(){renderTable();buildDash();buildMIS();if(currentRole==='pc'||currentRole==='owner')buildPC();}
 
@@ -799,24 +805,25 @@ function classifyAction(text){
   if(!text)return'other';
   var t=text.toLowerCase();
   if(t.indexOf('new lead added')>-1||t.indexOf('lead added')>-1)return'add';
-  if(t.indexOf('proof')>-1)return'proof';
   if(t.indexOf('note added')>-1||t.indexOf('pc note')>-1)return'note';
   if(t.indexOf('moved to')>-1||t.indexOf('stage change')>-1||t.indexOf('marked as')>-1||t.indexOf('re-activated')>-1||t.indexOf('→')>-1)return'stage';
   if(t.indexOf('edited')>-1||t.indexOf('updated')>-1||t.indexOf('saved')>-1||t.indexOf('details')>-1)return'update';
   return'other';
 }
+function rowHasProof(r){return!!(r&&r.proof_url&&isValidUrl(r.proof_url));}
 
-function actTypeBadge(text){
-  var type=classifyAction(text);
+function actTypeBadge(r){
+  var type=classifyAction(r.action_text);
   var map={
     add:'<span class="act-type-tag act-type-add">➕ Lead Added</span>',
     note:'<span class="act-type-tag act-type-note">📝 Note</span>',
-    proof:'<span class="act-type-tag act-type-proof">📎 Proof</span>',
     stage:'<span class="act-type-tag act-type-stage">🔄 Stage Change</span>',
     update:'<span class="act-type-tag act-type-update">✏️ Updated</span>',
     other:'<span class="act-type-tag act-type-other">📌 Action</span>'
   };
-  return map[type]||map.other;
+  var badge=map[type]||map.other;
+  if(rowHasProof(r))badge+='<span class="act-type-tag act-type-proof" style="margin-left:4px">📎 Proof</span>';
+  return badge;
 }
 
 function extractNoteFromAction(text){
@@ -901,7 +908,8 @@ function renderActivityLog(){
     if(from&&r.log_date<from)return false;
     if(to&&r.log_date>to)return false;
     if(doer!=='All'&&r.doer_role!==doer)return false;
-    if(typeF!=='All'&&classifyAction(r.action_text)!==typeF)return false;
+    if(typeF==='proof'){if(!rowHasProof(r))return false;}
+    else if(typeF!=='All'&&classifyAction(r.action_text)!==typeF)return false;
     return true;
   });
 
@@ -934,7 +942,7 @@ function renderActivityLog(){
     +'<td>'+actRoleBadge(r.doer_role)+'</td>'
     +'<td style="font-weight:600">'+escHtml(r.lead_name||'—')+'</td>'
     +'<td style="font-size:11px;color:var(--sub)">'+(r.lead_phone||'—')+'</td>'
-    +'<td>'+actTypeBadge(r.action_text)+'<span style="font-size:11px;color:var(--sub);margin-left:5px">'+escHtml(r.action_text)+'</span></td>'
+    +'<td>'+actTypeBadge(r)+'<span style="font-size:11px;color:var(--sub);margin-left:5px">'+escHtml(r.action_text)+'</span></td>'
     +'<td>'+noteHtml+'</td>'
     +'<td>'+proofHtml+'</td>'
     +'</tr>';
@@ -1135,7 +1143,7 @@ function confirmNFU(key){
   showToast('Saving...','i');
   savePipe(function(){
     buildAll();
-    logActivity(stageLabel(key)+' done → '+stageLabel(nm)+' scheduled for '+nd,l);
+    logActivity(stageLabel(key)+' done → '+stageLabel(nm)+' scheduled for '+nd,l,(l.pipeline[key].notes||'').trim(),l.pipeline[key].proof||'');
     showToast('✓ '+stageLabel(nm)+' scheduled for '+fmtDate(nd),'s');
     openPipeline(viewingId);
   });
@@ -1193,7 +1201,7 @@ function meetingSuccess(){
   l.pipeline.stage='advance';
   savePipe(function(){
     buildAll();
-    logActivity('Meeting Successful — moved to Advance 🎉',l);
+    logActivity('Meeting Successful — moved to Advance 🎉',l,(l.pipeline.meeting.notes||'').trim(),l.pipeline.meeting.proof||'');
     showToast('🎉 Meeting Successful! Moved to Advance','s');
     openPipeline(viewingId);
   });
@@ -1209,7 +1217,7 @@ function meetingFailed(){
   l.pipeline.fu3.status='pending';
   savePipe(function(){
     buildAll();
-    logActivity('Meeting Failed — rescheduled to FU3',l);
+    logActivity('Meeting Failed — rescheduled to FU3',l,(l.pipeline.meeting.notes||'').trim(),l.pipeline.meeting.proof||'');
     showToast('Meeting failed — FU3 rescheduled','i');
     openPipeline(viewingId);
   });
@@ -1222,8 +1230,8 @@ function saveMeetingData(){
   var pfEl=document.getElementById('pf-meeting'),proofChanged=false,proofVal='';
   if(pfEl){proofVal=pfEl.value.trim();if(proofVal&&!isValidUrl(proofVal)){showToast('⚠ Proof must be a valid link (https://...)','e');return;}if(proofVal!==(l.pipeline.meeting.proof||''))proofChanged=true;l.pipeline.meeting.proof=proofVal;}
   savePipe(function(){
-    logActivity('Meeting details updated',l);
-    if(proofChanged&&proofVal){logActivity('Proof added for Meeting',l,'Proof: '+proofVal,proofVal);}
+    var noteText=(l.pipeline.meeting.notes||'').trim();
+    logActivity('Meeting details updated',l,noteText,l.pipeline.meeting.proof||'');
     showToast('✓ Meeting saved','s');
     openPipeline(viewingId);
   });
@@ -1235,8 +1243,8 @@ function saveQuotData(){
   var pfEl=document.getElementById('pf-quotation'),proofChanged=false,proofVal='';
   if(pfEl){proofVal=pfEl.value.trim();if(proofVal&&!isValidUrl(proofVal)){showToast('⚠ Proof must be a valid link (https://...)','e');return;}if(proofVal!==(l.pipeline.quotation.proof||''))proofChanged=true;l.pipeline.quotation.proof=proofVal;}
   savePipe(function(){
-    logActivity('Quotation details saved — Value: ₹'+(l.pipeline.quotation.value||'—'),l);
-    if(proofChanged&&proofVal){logActivity('Proof added for Quotation',l,'Proof: '+proofVal,proofVal);}
+    var noteText=(l.pipeline.quotation.notes||'').trim();
+    logActivity('Quotation details saved — Value: ₹'+(l.pipeline.quotation.value||'—'),l,noteText,l.pipeline.quotation.proof||'');
     showToast('✓ Quotation saved','s');
     openPipeline(viewingId);
   });
@@ -1249,7 +1257,7 @@ function markQuotDone(){
   l.pipeline.stage='advance';
   savePipe(function(){
     buildAll();
-    logActivity('Quotation accepted — moved to Advance ✅',l);
+    logActivity('Quotation accepted — moved to Advance ✅',l,(l.pipeline.quotation.notes||'').trim(),l.pipeline.quotation.proof||'');
     showToast('✓ Moved to Advance!','s');
     openPipeline(viewingId);
   });
@@ -1265,8 +1273,8 @@ function saveAdvData(){
   var pfEl=document.getElementById('pf-advance'),proofChanged=false,proofVal='';
   if(pfEl){proofVal=pfEl.value.trim();if(proofVal&&!isValidUrl(proofVal)){showToast('⚠ Proof must be a valid link (https://...)','e');return;}if(proofVal!==(l.pipeline.advance.proof||''))proofChanged=true;l.pipeline.advance.proof=proofVal;}
   savePipe(function(){
-    logActivity('Order details saved — Advance: ₹'+(l.pipeline.advance.amount||'—'),l);
-    if(proofChanged&&proofVal){logActivity('Proof added for Advance/Order',l,'Proof: '+proofVal,proofVal);}
+    var noteText=(l.pipeline.advance.notes||'').trim();
+    logActivity('Order details saved — Advance: ₹'+(l.pipeline.advance.amount||'—'),l,noteText,l.pipeline.advance.proof||'');
     showToast('✓ Order saved','s');
     openPipeline(viewingId);
   });
@@ -1309,7 +1317,7 @@ function confirmFU3DateChange(){
   l.pipeline.stage='fu3';
   savePipe(function(){
     buildAll();
-    logActivity('FU3 date updated to: '+nd,l);
+    logActivity('FU3 date updated to: '+nd,l,(l.pipeline.fu3.notes||'').trim(),l.pipeline.fu3.proof||'');
     showToast('✓ FU3 date updated to: '+fmtDate(nd),'s');
     openPipeline(viewingId);
   });
@@ -1319,20 +1327,23 @@ function doDeleteLead(){if(!confirm('Delete this lead permanently?'))return;dele
 function openEditFromPipe(){var l=getLead();closeMo('pipeMo');setTimeout(function(){openAdd(l);},100);}
 function toggleStep(head){head.closest('.step-card').classList.toggle('open');}
 function setPCFilt(f,btn){activePCFilt=f;document.querySelectorAll('#view-pc .fb').forEach(function(b){b.classList.remove('active');});if(btn)btn.classList.add('active');buildPC();}
-function buildPC(){var pcLeads=getPCLeads(activePCFilt),allOD=getPCLeads('all');document.getElementById('pcStatsRow').innerHTML=[{c:'mc-red',lbl:'Total Overdue',val:allOD.length,sub:'Needs action'},{c:'mc-blue',lbl:'FU1 Overdue',val:getPCLeads('fu1').length,sub:'FU1 pending'},{c:'mc-orange',lbl:'FU2 Overdue',val:getPCLeads('fu2').length,sub:'FU2 pending'},{c:'mc-purple',lbl:'FU3+Meeting',val:getPCLeads('fu3').length+getPCLeads('meeting').length,sub:'Critical'}].map(function(c){return'<div class="mis-card '+c.c+'"><div class="mis-lbl">'+c.lbl+'</div><div class="mis-val">'+c.val+'</div><div class="mis-sub">'+c.sub+'</div></div>';}).join('');if(!pcLeads.length){document.getElementById('pcLeadList').innerHTML='<div style="text-align:center;padding:60px"><div style="font-size:48px;margin-bottom:14px;opacity:.3">🎉</div><div style="font-size:18px;font-weight:700;color:var(--sub)">All clear!</div></div>';return;}document.getElementById('pcLeadList').innerHTML=pcLeads.map(function(l){var p=l.pipeline,s=p.stage,c=avC(l.exec||l.name),od=getOverdueDays(l);var pl=s==='fu1'?p.fu1.planned:s==='fu2'?p.fu2.planned:s==='fu3'?p.fu3.planned:p.meeting.planned||'';var nk=l.id+'_'+s,notes=pcNotes[nk]||[],ro=READ_ONLY.includes(currentRole);var notesHtml=notes.length?notes.map(function(n){return'<div class="pc-note-item"><div class="pc-note-time">'+n.ts+'</div><div class="pc-note-text">'+escHtml(n.text)+'</div></div>';}).join(''):'<div style="color:var(--dim);font-size:11px;padding:6px 0">No notes yet</div>';return'<div class="pc-card"><div class="pc-card-head"><div class="pc-card-left"><div class="pc-card-av" style="background:'+c+'20;color:'+c+'">'+ini(l.exec||l.name)+'</div><div><div class="pc-card-name">'+escHtml(l.name)+'</div><div class="pc-card-meta">'+l.phone+' · '+(l.req||'—')+' · '+(l.exec||'—')+'</div></div></div><div class="pc-card-right"><span class="badge '+stageClass(s)+'">'+stageLabel(s)+'</span><span class="overdue-badge">⚠ '+od+'d overdue</span><button onclick="openPipeline(\''+l.id+'\')" style="padding:6px 12px;background:var(--blue);color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">View Pipeline</button></div></div><div class="pc-card-body"><div class="pc-step-info"><div class="pc-step-field"><div class="pc-step-label">Stage</div><div class="pc-step-value">'+stageLabel(s)+'</div></div><div class="pc-step-field"><div class="pc-step-label">Planned</div><div class="pc-step-value" style="color:var(--red)">'+fmtDate(pl)+'</div></div><div class="pc-step-field"><div class="pc-step-label">Overdue</div><div class="pc-step-value" style="color:var(--red)">'+od+' days</div></div><div class="pc-step-field"><div class="pc-step-label">Source</div><div class="pc-step-value">'+(l.src||'—')+'</div></div></div><div class="pc-notes-section"><div class="pc-notes-title">📝 PC Notes <span style="background:var(--blue-bg);color:var(--blue);padding:2px 7px;border-radius:10px;font-size:9px">'+notes.length+' notes</span></div>'+notesHtml+(ro?'':'<div class="pc-note-add" data-lid="'+l.id+'" data-st="'+s+'"><input type="text" placeholder="Add a note..."><button>Add Note</button></div>')+'</div></div></div>';}).join('');setTimeout(function(){document.querySelectorAll('.pc-note-add').forEach(function(wrap){wrap.querySelector('button').onclick=function(){var inp=wrap.querySelector('input');savePCNoteUI(inp,wrap.getAttribute('data-lid'),wrap.getAttribute('data-st'));};wrap.querySelector('input').onkeydown=function(e){if(e.key==='Enter'){savePCNoteUI(this,wrap.getAttribute('data-lid'),wrap.getAttribute('data-st'));}};});},50);}
+function buildPC(){var pcLeads=getPCLeads(activePCFilt),allOD=getPCLeads('all');document.getElementById('pcStatsRow').innerHTML=[{c:'mc-red',lbl:'Total Overdue',val:allOD.length,sub:'Needs action'},{c:'mc-blue',lbl:'FU1 Overdue',val:getPCLeads('fu1').length,sub:'FU1 pending'},{c:'mc-orange',lbl:'FU2 Overdue',val:getPCLeads('fu2').length,sub:'FU2 pending'},{c:'mc-purple',lbl:'FU3+Meeting',val:getPCLeads('fu3').length+getPCLeads('meeting').length,sub:'Critical'}].map(function(c){return'<div class="mis-card '+c.c+'"><div class="mis-lbl">'+c.lbl+'</div><div class="mis-val">'+c.val+'</div><div class="mis-sub">'+c.sub+'</div></div>';}).join('');if(!pcLeads.length){document.getElementById('pcLeadList').innerHTML='<div style="text-align:center;padding:60px"><div style="font-size:48px;margin-bottom:14px;opacity:.3">🎉</div><div style="font-size:18px;font-weight:700;color:var(--sub)">All clear!</div></div>';return;}document.getElementById('pcLeadList').innerHTML=pcLeads.map(function(l){var p=l.pipeline,s=p.stage,c=avC(l.exec||l.name),od=getOverdueDays(l);var pl=s==='fu1'?p.fu1.planned:s==='fu2'?p.fu2.planned:s==='fu3'?p.fu3.planned:p.meeting.planned||'';var nk=l.id+'_'+s,notes=pcNotes[nk]||[],ro=READ_ONLY.includes(currentRole);var notesHtml=notes.length?notes.map(function(n){return'<div class="pc-note-item"><div class="pc-note-time">'+n.ts+'</div><div class="pc-note-text">'+escHtml(n.text)+(n.proof&&isValidUrl(n.proof)?'<div class="pc-note-proof"><a href="'+escHtml(n.proof)+'" target="_blank" rel="noopener" class="proof-link-chip">🔗 View Proof</a></div>':'')+'</div></div>';}).join(''):'<div style="color:var(--dim);font-size:11px;padding:6px 0">No notes yet</div>';return'<div class="pc-card"><div class="pc-card-head"><div class="pc-card-left"><div class="pc-card-av" style="background:'+c+'20;color:'+c+'">'+ini(l.exec||l.name)+'</div><div><div class="pc-card-name">'+escHtml(l.name)+'</div><div class="pc-card-meta">'+l.phone+' · '+(l.req||'—')+' · '+(l.exec||'—')+'</div></div></div><div class="pc-card-right"><span class="badge '+stageClass(s)+'">'+stageLabel(s)+'</span><span class="overdue-badge">⚠ '+od+'d overdue</span><button onclick="openPipeline(\''+l.id+'\')" style="padding:6px 12px;background:var(--blue);color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">View Pipeline</button></div></div><div class="pc-card-body"><div class="pc-step-info"><div class="pc-step-field"><div class="pc-step-label">Stage</div><div class="pc-step-value">'+stageLabel(s)+'</div></div><div class="pc-step-field"><div class="pc-step-label">Planned</div><div class="pc-step-value" style="color:var(--red)">'+fmtDate(pl)+'</div></div><div class="pc-step-field"><div class="pc-step-label">Overdue</div><div class="pc-step-value" style="color:var(--red)">'+od+' days</div></div><div class="pc-step-field"><div class="pc-step-label">Source</div><div class="pc-step-value">'+(l.src||'—')+'</div></div></div><div class="pc-notes-section"><div class="pc-notes-title">📝 PC Notes <span style="background:var(--blue-bg);color:var(--blue);padding:2px 7px;border-radius:10px;font-size:9px">'+notes.length+' notes</span></div>'+notesHtml+(ro?'':'<div class="pc-note-add" data-lid="'+l.id+'" data-st="'+s+'"><input type="text" placeholder="Add a note..."><input type="text" class="pc-proof-inp" placeholder="📎 Google Drive proof link (optional)"><button>Add Note</button></div>')+'</div></div></div>';}).join('');setTimeout(function(){document.querySelectorAll('.pc-note-add').forEach(function(wrap){wrap.querySelector('button').onclick=function(){var inp=wrap.querySelector('input[type=text]');var pfInp=wrap.querySelector('.pc-proof-inp');savePCNoteUI(inp,pfInp,wrap.getAttribute('data-lid'),wrap.getAttribute('data-st'));};wrap.querySelector('input[type=text]').onkeydown=function(e){if(e.key==='Enter'){var pfInp=wrap.querySelector('.pc-proof-inp');savePCNoteUI(this,pfInp,wrap.getAttribute('data-lid'),wrap.getAttribute('data-st'));}};});},50);}
 
-function savePCNoteUI(inp,leadId,stage){
+function savePCNoteUI(inp,pfInp,leadId,stage){
   var text=inp.value.trim();if(!text){showToast('Type a note first','e');return;}
+  var proofVal=pfInp?pfInp.value.trim():'';
+  if(proofVal&&!isValidUrl(proofVal)){showToast('⚠ Proof must be a valid link (https://...)','e');return;}
   var now=new Date(),ts=now.getDate()+' '+MON[now.getMonth()]+' '+String(now.getFullYear()).slice(2)+', '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
   var noteBy=ROLE_LABELS[currentRole]||currentRole;
-  savePCNote_db(leadId,stage,text,noteBy,ts,function(err,res){
+  savePCNote_db(leadId,stage,text,noteBy,ts,proofVal,function(err,res){
     if(err){showToast('Note save failed','e');return;}
     var key=leadId+'_'+stage;
     if(!pcNotes[key])pcNotes[key]=[];
-    pcNotes[key].push({text:text,ts:ts,by:noteBy});
+    pcNotes[key].push({text:text,ts:ts,by:noteBy,proof:proofVal});
     inp.value='';
+    if(pfInp)pfInp.value='';
     var lead=leads.find(function(x){return x.id===leadId;});
-    logActivity('PC Note added: '+text,lead,text);
+    logActivity('PC Note added: '+text,lead,text,proofVal);
     buildPC();
     showToast('Note added ✓','s');
   });
