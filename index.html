@@ -835,8 +835,15 @@ function extractNoteFromAction(text){
   return'';
 }
 
+var _lastLogSig=null,_lastLogTime=0;
 function logActivity(actionText,lead,extraNote,proofUrl){
   if(!currentRole)return;
+  // Duplicate guard: if the exact same action for the same lead was just logged within 5s, skip it.
+  // This prevents accidental double-rows from rapid double-clicks, slow network re-taps, etc.
+  var sig=(lead?lead.id:'')+'|'+actionText+'|'+(extraNote||'')+'|'+(proofUrl||'');
+  var nowMs=Date.now();
+  if(_lastLogSig===sig&&(nowMs-_lastLogTime)<5000){return;}
+  _lastLogSig=sig;_lastLogTime=nowMs;
   var now=new Date();
   var ts=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
   var row={log_date:today(),log_time:ts,doer_role:currentRole,lead_id:lead?lead.id:'',lead_name:lead?lead.name:'',lead_phone:lead?lead.phone:'',action_text:actionText,note_text:extraNote||extractNoteFromAction(actionText),proof_url:proofUrl||''};
@@ -1073,15 +1080,30 @@ function saveLeadForm(){
 function getLead(){return leads.find(function(x){return x.id===viewingId;})||null;}
 function openPipeline(id){viewingId=id;var l=getLead();if(!l)return;document.getElementById('pipeTitle').innerHTML=escHtml(l.name)+' <span>Pipeline</span>';var sc=stageClass(l.pipeline?l.pipeline.stage:'fu1');document.getElementById('pipeHdr').innerHTML='<div style="flex:1"><div class="ph-name">'+escHtml(l.name)+'</div><div class="ph-meta"><div class="ph-m">📞 <span>'+(l.phone||'—')+'</span></div>'+(l.email?'<div class="ph-m">📧 <span>'+escHtml(l.email)+'</span></div>':'')+(l.company?'<div class="ph-m">🏢 <span>'+escHtml(l.company)+'</span></div>':'')+'<div class="ph-m">📍 <span>'+(l.loc||'—')+'</span></div><div class="ph-m">🛠 <span>'+(l.req||'—')+'</span></div>'+(l.exec?'<div class="ph-m">👤 <span>'+escHtml(l.exec)+'</span></div>':'')+(l.budget?'<div class="ph-m">💰 <span>'+l.budget+'</span></div>':'')+(l.timeline?'<div class="ph-m">📅 <span>'+l.timeline+'</span></div>':'')+'</div></div><div style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap"><span class="badge '+sc+'">'+stageLabel(l.pipeline?l.pipeline.stage:'fu1')+'</span>'+ltBadge(l.leadtype)+'<span style="padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600;background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold-border)">'+(l.pri==='Med'?'Medium':l.pri||'Medium')+' Priority</span>'+(l.src?'<span style="padding:3px 8px;border-radius:20px;font-size:10px;background:var(--bg);color:var(--sub);border:1px solid var(--border)">'+l.src+'</span>':'')+'</div>';buildFlow(l);openMo('pipeMo');}
 
+var savingLock=false;
 function savePipe(cb){
   var l=getLead();if(!l)return;
+  if(savingLock){showToast('⏳ Pehle se save ho raha hai, thoda ruko...','i');return;}
+  savingLock=true;
   setSS('saving','Saving...');
   sbFetch('/leads?id=eq.'+l.id,'PATCH',{pipeline:l.pipeline,updated_at:new Date().toISOString()}).then(function(){
     setSS('saved','✓ Saved');
     leads=leads.map(function(x){return x.id===viewingId?l:x;});
     renderTable();
+    savingLock=false;
     if(typeof cb==='function')cb();
-  }).catch(function(e){setSS('err','Save failed');showToast('Save failed','e');console.error(e);});
+  }).catch(function(e){savingLock=false;setSS('err','Save failed');showToast('Save failed','e');console.error(e);});
+}
+
+function guardClick(btn,fn){
+  if(!btn||btn.disabled)return;
+  btn.disabled=true;
+  var origHtml=btn.innerHTML,origOpacity=btn.style.opacity;
+  btn.innerHTML='⏳ Saving...';
+  btn.style.opacity='0.6';
+  // Safety re-enable in case the modal doesn't re-render (e.g. save failed) — harmless if button was already replaced
+  setTimeout(function(){try{btn.disabled=false;btn.innerHTML=origHtml;btn.style.opacity=origOpacity;}catch(e){}},9000);
+  try{fn();}catch(e){btn.disabled=false;btn.innerHTML=origHtml;btn.style.opacity=origOpacity;throw e;}
 }
 
 function proofField(idPrefix,val,ro){
