@@ -790,7 +790,7 @@ function loadData(){
   }).catch(function(e){setSS('err','Load failed');console.error(e);showToast('Load failed: '+e.message,'e');});
 }
 
-function saveLead_db(lead,cb){setSS('saving','Saving...');var row={id:lead.id,name:lead.name,phone:lead.phone,email:lead.email||'',company:lead.company||'',req:lead.req||'',src:lead.src||'',loc:lead.loc||'',exec:lead.exec||'',assigned_role:lead.assigned_role||currentRole,budget:lead.budget||'',pri:lead.pri||'Med',date:lead.date||today(),rem:lead.rem||'',leadtype:lead.leadtype||'Direct Client',timeline:lead.timeline||'',pipeline:lead.pipeline,updated_at:new Date().toISOString()};sbFetch('/leads?on_conflict=id','POST',row).then(function(){setSS('saved','✓ Saved');if(typeof cb==='function')cb(null);}).catch(function(e){sbFetch('/leads?id=eq.'+lead.id,'PATCH',row).then(function(){setSS('saved','✓ Saved');if(typeof cb==='function')cb(null);}).catch(function(e2){setSS('err','Save failed');if(typeof cb==='function')cb(e2);});});}
+function saveLead_db(lead,isNew,cb){if(typeof isNew==='function'){cb=isNew;isNew=undefined;}setSS('saving','Saving...');var row={id:lead.id,name:lead.name,phone:lead.phone,email:lead.email||'',company:lead.company||'',req:lead.req||'',src:lead.src||'',loc:lead.loc||'',exec:lead.exec||'',assigned_role:lead.assigned_role||currentRole,budget:lead.budget||'',pri:lead.pri||'Med',date:lead.date||today(),rem:lead.rem||'',leadtype:lead.leadtype||'Direct Client',timeline:lead.timeline||'',pipeline:lead.pipeline,updated_at:new Date().toISOString()};if(isNew===undefined)isNew=!leads.some(function(x){return x.id===lead.id;});if(isNew){sbFetch('/leads','POST',row).then(function(res){if(!res||!res.length){setSS('err','Save failed');if(typeof cb==='function')cb(new Error('Insert returned no row'));return;}setSS('saved','✓ Saved');if(typeof cb==='function')cb(null);}).catch(function(e){setSS('err','Save failed');if(typeof cb==='function')cb(e);});}else{sbFetch('/leads?id=eq.'+lead.id,'PATCH',row).then(function(res){if(!res||!res.length){setSS('err','Save failed');if(typeof cb==='function')cb(new Error('Lead not found in DB: '+lead.id));return;}setSS('saved','✓ Saved');if(typeof cb==='function')cb(null);}).catch(function(e){setSS('err','Save failed');if(typeof cb==='function')cb(e);});}}
 function deleteLead_db(id,cb){setSS('saving','Deleting...');sbFetch('/leads?id=eq.'+id,'DELETE').then(function(){setSS('saved','✓ Synced');if(typeof cb==='function')cb(null);}).catch(function(e){setSS('err','Delete failed');if(typeof cb==='function')cb(e);});}
 function savePCNote_db(leadId,stage,noteText,noteBy,noteTs,proofUrl,cb){var row={lead_id:leadId,stage:stage,note_text:noteText,note_by:noteBy,note_ts:noteTs,note_proof:proofUrl||''};sbFetch('/pc_notes','POST',row).then(function(res){if(typeof cb==='function')cb(null,res);}).catch(function(e){
   // Retry without note_proof in case the column doesn't exist yet in Supabase
@@ -1067,7 +1067,7 @@ function saveLeadForm(){
     pipeline:existing?existing.pipeline:initPipeline(dateVal)
   };
   closeMo('addMo');
-  saveLead_db(lead,function(err){
+  saveLead_db(lead,!isEdit,function(err){
     if(err){showToast('Save failed: '+err.message,'e');return;}
     if(isEdit){leads=leads.map(function(l){return l.id===editingId?lead:l;});}else{leads.push(lead);}
     buildAll();
@@ -1086,11 +1086,12 @@ function savePipe(cb){
   if(savingLock){showToast('⏳ Pehle se save ho raha hai, thoda ruko...','i');return;}
   savingLock=true;
   setSS('saving','Saving...');
-  sbFetch('/leads?id=eq.'+l.id,'PATCH',{pipeline:l.pipeline,updated_at:new Date().toISOString()}).then(function(){
+  sbFetch('/leads?id=eq.'+l.id,'PATCH',{pipeline:l.pipeline,updated_at:new Date().toISOString()}).then(function(res){
+    savingLock=false;
+    if(!res||!res.length){setSS('err','Save failed');showToast('⚠ Save failed — lead DB me nahi mila. Refresh karke dubara try karein.','e');return;}
     setSS('saved','✓ Saved');
     leads=leads.map(function(x){return x.id===viewingId?l:x;});
     renderTable();
-    savingLock=false;
     if(typeof cb==='function')cb();
   }).catch(function(e){savingLock=false;setSS('err','Save failed');showToast('Save failed','e');console.error(e);});
 }
