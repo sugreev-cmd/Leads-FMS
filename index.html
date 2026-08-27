@@ -324,6 +324,25 @@ td{padding:10px 12px;vertical-align:middle}
 .proof-link-chip:hover{background:var(--cyan);color:#fff}
 @media(max-width:1200px){.kpi-grid,.fms-stats{grid-template-columns:repeat(3,1fr)}.dg3{grid-template-columns:1fr 1fr}.mis-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:700px){.kpi-grid,.fms-stats{grid-template-columns:repeat(2,1fr)}.dg2,.dg3,.dg32{grid-template-columns:1fr}.date-filter-box{flex-wrap:wrap}.date-filter-box input[type=date]{width:100px}}
+
+/* ══════════════ SITE VISITS MODULE ══════════════ */
+.sv-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.sv-title{font-size:19px;font-weight:800;letter-spacing:-.3px}
+.sv-sub{font-size:11px;color:var(--dim);margin-top:2px}
+.sv-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:18px}
+.sv-filters{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 16px;box-shadow:var(--shadow);display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px}
+.sv-pin{color:var(--green);font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px;font-size:11px}
+.sv-pin:hover{text-decoration:underline}
+.sv-loc{display:block;color:var(--sub);font-size:11px;margin-top:2px;max-width:210px;word-break:break-word}
+.sv-chip{display:inline-block;background:var(--green-bg);color:var(--green);border:1px solid #A7F3D0;border-radius:6px;padding:1px 6px;font-size:9px;font-weight:700;letter-spacing:.4px;margin-top:3px}
+.sv-chip.man{background:var(--bg);color:var(--dim);border-color:var(--border)}
+.sv-rem{color:var(--sub);line-height:1.5;max-width:300px;word-break:break-word}
+.sv-name{font-weight:600}
+.sv-box{background:var(--green-bg);border:1px solid #A7F3D0;border-radius:9px;padding:12px 14px;margin-top:9px;font-size:11px;color:#065F46;line-height:1.6;display:none}
+.sv-box.on{display:block}
+.sv-box.err{background:var(--red-bg);border-color:#FECACA;color:#991B1B}
+.sv-hint{font-size:10px;color:var(--dim);margin-top:5px;line-height:1.5}
+.sv-empty{text-align:center;padding:34px 20px;color:var(--dim);font-size:12px}
 </style>
 </head>
 <body>
@@ -366,6 +385,7 @@ td{padding:10px 12px;vertical-align:middle}
       <div class="tb-ni" id="nav-fms">📋 Leads</div>
       <div class="tb-ni" id="nav-pc" style="display:none">📌 PC Follow-Up</div>
       <div class="tb-ni" id="nav-activity">📝 Activity Log</div>
+      <div class="tb-ni" id="nav-visits" style="display:none">📍 Site Visits</div>
     </div>
     <div class="tb-right">
       <div class="tb-pill today" id="todayPill">⚡ 0 Today</div>
@@ -579,6 +599,72 @@ td{padding:10px 12px;vertical-align:middle}
             <tbody id="actLogBody"></tbody>
           </table>
         </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ SITE VISITS ══════════════ -->
+    <div class="view" id="view-visits">
+      <div class="sv-head">
+        <div>
+          <div class="sv-title">Site Visits</div>
+          <div class="sv-sub">Every client site visit logged with time, location and remarks</div>
+        </div>
+        <button class="bp pri" id="svAddBtn" style="display:none">＋ Log Site Visit</button>
+      </div>
+
+      <div class="sv-cards">
+        <div class="act-summary-card" style="border-top:3px solid var(--blue)">
+          <div class="act-summary-val" style="color:var(--blue)" id="svK0">0</div>
+          <div class="act-summary-lbl">Visits Today</div>
+          <div style="font-size:10px;color:var(--dim);margin-top:2px" id="svK0s">&nbsp;</div>
+        </div>
+        <div class="act-summary-card" style="border-top:3px solid var(--green)">
+          <div class="act-summary-val" style="color:var(--green)" id="svK1">0</div>
+          <div class="act-summary-lbl">Visits This Month</div>
+          <div style="font-size:10px;color:var(--dim);margin-top:2px" id="svK1s">&nbsp;</div>
+        </div>
+        <div class="act-summary-card" style="border-top:3px solid var(--orange)">
+          <div class="act-summary-val" style="color:var(--orange)" id="svK2">0</div>
+          <div class="act-summary-lbl">Clients Visited</div>
+          <div style="font-size:10px;color:var(--dim);margin-top:2px">Distinct clients in range</div>
+        </div>
+        <div class="act-summary-card" style="border-top:3px solid var(--purple)">
+          <div class="act-summary-val" style="color:var(--purple)" id="svK3">0</div>
+          <div class="act-summary-lbl">GPS Captured</div>
+          <div style="font-size:10px;color:var(--dim);margin-top:2px">Location recorded</div>
+        </div>
+      </div>
+
+      <div class="sv-filters">
+        <div class="fg"><label class="fl">From Date</label><input class="fs" type="date" id="svFrom"></div>
+        <div class="fg"><label class="fl">To Date</label><input class="fs" type="date" id="svTo"></div>
+        <div class="fg" id="svRoleWrap" style="display:none"><label class="fl">Executive</label>
+          <select class="fs" id="svFiltRole"><option value="">All Executives</option></select>
+        </div>
+        <div class="fg" style="flex:1;min-width:180px"><label class="fl">Search</label>
+          <input class="fs" id="svSearch" placeholder="Client name, phone, location or remarks..." style="width:100%">
+        </div>
+        <button class="bs" id="svClearBtn">Clear</button>
+        <button class="bs" id="svCsvBtn">⬇ Export CSV</button>
+      </div>
+
+      <div class="act-table-wrap">
+        <table class="act-table">
+          <thead>
+            <tr>
+              <th style="padding-left:16px">#</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Executive</th>
+              <th>Client Name</th>
+              <th>Phone</th>
+              <th>Location</th>
+              <th>Remarks</th>
+              <th>Linked Lead</th>
+            </tr>
+          </thead>
+          <tbody id="svBody"></tbody>
+        </table>
       </div>
     </div>
 
@@ -963,7 +1049,7 @@ function togglePass(){var i=document.getElementById('passInput');i.type=i.type==
 function doLogin(){if(!selRole){document.getElementById('lErr').textContent='Please select your role first';return;}var pass=document.getElementById('passInput').value.trim();if(!pass){document.getElementById('lErr').textContent='Please enter your password';return;}var btn=document.getElementById('enterBtn');btn.classList.add('loading');btn.innerHTML='<span>Verifying...</span>';setTimeout(function(){if(pass===PASSWORDS[selRole]){currentRole=selRole;sessionStorage.setItem('al_role',selRole);btn.innerHTML='<span>✓ Welcome!</span>';btn.style.background='linear-gradient(135deg,#059669,#10B981)';setTimeout(enterApp,500);}else{btn.classList.remove('loading');btn.style.background='';btn.innerHTML='<span>Sign In</span><span>→</span>';document.getElementById('lErr').textContent='Incorrect password';document.getElementById('passInput').value='';document.getElementById('passInput').focus();}},600);}
 function doLogout(){sessionStorage.removeItem('al_role');currentRole=null;document.getElementById('appPage').classList.remove('active');document.getElementById('loginPage').classList.add('active');document.getElementById('passInput').value='';document.querySelectorAll('.role-btn').forEach(function(b){b.classList.remove('sel');});selRole=null;var btn=document.getElementById('enterBtn');btn.classList.remove('loading');btn.style.background='';btn.innerHTML='<span>Sign In</span><span>→</span>';}
 function enterApp(){document.getElementById('loginPage').classList.remove('active');document.getElementById('appPage').classList.add('active');document.getElementById('rolePill').textContent=ROLE_LABELS[currentRole]||currentRole;if(READ_ONLY.includes(currentRole)){document.querySelectorAll('.add-pill,.add-btn-t').forEach(function(b){b.style.display='none';});}if(currentRole==='pc'){document.getElementById('nav-pc').style.display='flex';['nav-dash','nav-mis','nav-fms'].forEach(function(id){document.getElementById(id).style.display='none';});document.getElementById('addPillBtn').style.display='none';}else if(currentRole==='owner'){document.getElementById('nav-pc').style.display='flex';}loadData();if(currentRole==='pc'){setTimeout(function(){showView('pc');},300);}}
-function showView(v){document.querySelectorAll('.view').forEach(function(e){e.classList.remove('active');});document.querySelectorAll('.tb-ni').forEach(function(e){e.classList.remove('active');});document.getElementById('view-'+v).classList.add('active');var n=document.getElementById('nav-'+v);if(n)n.classList.add('active');if(v==='dash')buildDash();if(v==='mis')buildMIS();if(v==='pc')buildPC();if(v==='activity')renderActivityLog();}
+function showView(v){document.querySelectorAll('.view').forEach(function(e){e.classList.remove('active');});document.querySelectorAll('.tb-ni').forEach(function(e){e.classList.remove('active');});document.getElementById('view-'+v).classList.add('active');var n=document.getElementById('nav-'+v);if(n)n.classList.add('active');if(v==='dash')buildDash();if(v==='mis')buildMIS();if(v==='pc')buildPC();if(v==='activity')renderActivityLog();if(v==='visits')renderVisits();}
 function calcStats(){var vis=getVis();var byS=function(s){return vis.filter(function(l){return l.pipeline&&l.pipeline.stage===s;}).length;};return{total:vis.length,dt:vis.filter(isDueToday).length,ov:vis.filter(isOverdue).length,meet:byS('meeting'),quot:byS('quotation'),adv:byS('advance'),lost:byS('lost'),fu1:byS('fu1'),fu2:byS('fu2'),fu3:byS('fu3')};}
 function updateFMSStats(){var s=calcStats();['f-s0','f-s1','f-s2','f-s3','f-s4','f-s5'].forEach(function(id,i){document.getElementById(id).textContent=[s.total,s.dt,s.meet,s.quot,s.adv,s.ov][i];});document.getElementById('todayPill').textContent='⚡ '+s.dt+' Today';document.getElementById('alertPill').textContent='⚠ '+s.ov+' Overdue';}
 function buildDash(){var s=calcStats();['d-k0','d-k1','d-k2','d-k3','d-k4','d-k5'].forEach(function(id,i){document.getElementById(id).textContent=[s.total,s.dt,s.meet,s.quot,s.adv,s.ov][i];});document.getElementById('d-k1s').textContent=s.dt>0?'Action needed':'All clear ✓';document.getElementById('d-k1s').className='kpi-sub '+(s.dt>0?'dn':'ok');document.getElementById('d-k5s').textContent=s.ov>0?'⚠ Needs attention':'On track ✓';document.getElementById('d-k5s').className='kpi-sub '+(s.ov>0?'dn':'ok');document.getElementById('todayPill').textContent='⚡ '+s.dt+' Today';document.getElementById('alertPill').textContent='⚠ '+s.ov+' Overdue';buildFunnel(s);buildHotlist();buildStageBreak(s);buildRevenue();buildSources();buildTeam();buildPriority();}
@@ -1402,6 +1488,353 @@ window.onload=function(){
   var saved=sessionStorage.getItem('al_role');
   if(saved&&PASSWORDS[saved]){currentRole=saved;enterApp();}
 };
+
+/* ══════════════════════════════════════════════════════════════
+   SITE VISITS MODULE
+   Table in Supabase: site_visits
+   ══════════════════════════════════════════════════════════════ */
+
+/* Who may log a visit, and who may see everyone's visits.
+   To let BDM 2 and BDM 3 log visits too, just write:
+   var SV_CAN_ADD=['bdm1','bdm2','bdm3'];                        */
+var SV_CAN_ADD      = ['bdm1'];
+var SV_CAN_VIEW_ALL = ['owner'];
+
+var siteVisits = [];
+var svGeo = null;
+
+function svCanAdd(){ return SV_CAN_ADD.indexOf(currentRole) > -1; }
+function svViewAll(){ return SV_CAN_VIEW_ALL.indexOf(currentRole) > -1; }
+function svAllowed(){ return svCanAdd() || svViewAll(); }
+
+function svInit(){
+  var nav = document.getElementById('nav-visits');
+  if(!nav) return;
+  nav.style.display = svAllowed() ? 'flex' : 'none';
+  var add = document.getElementById('svAddBtn');
+  if(add) add.style.display = svCanAdd() ? 'inline-flex' : 'none';
+  var rw = document.getElementById('svRoleWrap');
+  if(rw) rw.style.display = svViewAll() ? 'flex' : 'none';
+  if(svAllowed()) svLoad();
+}
+
+function svLoad(){
+  return sbFetch('/site_visits?order=created_at.desc&limit=2000','GET').then(function(rows){
+    siteVisits = rows || [];
+    var v = document.getElementById('view-visits');
+    if(v && v.classList.contains('active')) renderVisits();
+  }).catch(function(){
+    siteVisits = [];
+    showToast('⚠ Site Visits could not load — create the "site_visits" table in Supabase first','e');
+  });
+}
+
+function svRows(){
+  var from = svVal('svFrom'), to = svVal('svTo'), role = svVal('svFiltRole');
+  var q = svVal('svSearch').toLowerCase();
+  return (siteVisits || []).filter(function(v){
+    if(!svViewAll() && v.doer_role !== currentRole) return false;
+    if(role && v.doer_role !== role) return false;
+    if(from && (v.visit_date||'') < from) return false;
+    if(to   && (v.visit_date||'') > to)   return false;
+    if(q){
+      var hay = ((v.client_name||'')+' '+(v.client_phone||'')+' '+
+                 (v.location_text||'')+' '+(v.remarks||'')+' '+(v.lead_name||'')).toLowerCase();
+      if(hay.indexOf(q) < 0) return false;
+    }
+    return true;
+  });
+}
+
+function svVal(id){ var e = document.getElementById(id); return e ? (e.value||'') : ''; }
+
+function renderVisits(){
+  var rows = svRows(), n = today(), mon = n.slice(0,7);
+  var todayN = 0, monthN = 0, gps = 0, clients = {};
+  rows.forEach(function(v){
+    if(v.visit_date === n) todayN++;
+    if((v.visit_date||'').slice(0,7) === mon) monthN++;
+    if(v.location_lat) gps++;
+    var k = (v.client_phone||v.client_name||'').trim().toLowerCase();
+    if(k) clients[k] = true;
+  });
+  document.getElementById('svK0').textContent = todayN;
+  document.getElementById('svK1').textContent = monthN;
+  document.getElementById('svK2').textContent = Object.keys(clients).length;
+  document.getElementById('svK3').textContent = gps;
+  document.getElementById('svK0s').textContent = svViewAll() ? 'Whole team' : 'Logged by you';
+  document.getElementById('svK1s').textContent = MON[new Date().getMonth()] + ' ' + new Date().getFullYear();
+
+  /* keep the executive filter in sync with whatever roles exist */
+  if(svViewAll()){
+    var sel = document.getElementById('svFiltRole'), cur = sel.value, seen = {};
+    (siteVisits||[]).forEach(function(v){ if(v.doer_role) seen[v.doer_role] = true; });
+    sel.innerHTML = '<option value="">All Executives</option>' + Object.keys(seen).map(function(r){
+      return '<option value="'+r+'"'+(r===cur?' selected':'')+'>'+(ROLE_LABELS[r]||r)+'</option>';
+    }).join('');
+  }
+
+  var body = document.getElementById('svBody');
+  if(!rows.length){
+    body.innerHTML = '<tr><td colspan="9"><div class="sv-empty">No site visits found for this filter.'+
+      (svCanAdd() ? '<br>Tap <b>＋ Log Site Visit</b> to add the first one.' : '')+'</div></td></tr>';
+    return;
+  }
+
+  body.innerHTML = rows.map(function(v,i){
+    var loc = '';
+    if(v.location_lat && v.location_lng){
+      loc += '<a class="sv-pin" target="_blank" rel="noopener" href="'+
+             escHtml(v.map_url || ('https://www.google.com/maps?q='+v.location_lat+','+v.location_lng))+
+             '">📍 Open in Maps</a>';
+    }
+    if(v.location_text) loc += '<span class="sv-loc">'+escHtml(v.location_text)+'</span>';
+    if(v.location_lat)  loc += '<span class="sv-chip">GPS ±'+Math.round(v.location_accuracy||0)+' m</span>';
+    else if(v.location_text) loc += '<span class="sv-chip man">Typed manually</span>';
+    if(!loc) loc = '<span style="color:var(--dim)">—</span>';
+
+    return '<tr>'+
+      '<td style="padding-left:16px;color:var(--dim)">'+(rows.length-i)+'</td>'+
+      '<td style="white-space:nowrap">'+fmtDate(v.visit_date)+'</td>'+
+      '<td style="white-space:nowrap">'+escHtml(v.visit_time||'—')+'</td>'+
+      '<td>'+actRoleBadge(v.doer_role)+'</td>'+
+      '<td class="sv-name">'+escHtml(v.client_name||'—')+'</td>'+
+      '<td style="white-space:nowrap">'+escHtml(v.client_phone||'—')+'</td>'+
+      '<td>'+loc+'</td>'+
+      '<td class="sv-rem">'+escHtml(v.remarks||'—')+'</td>'+
+      '<td style="color:var(--dim);font-size:11px">'+escHtml(v.lead_name||'—')+'</td>'+
+    '</tr>';
+  }).join('');
+}
+
+/* ── entry form ── */
+function svOpen(){
+  if(!svCanAdd()){ showToast('You do not have permission to log site visits','e'); return; }
+  svGeo = null;
+  var now = new Date();
+  document.getElementById('sv-date').value  = today();
+  document.getElementById('sv-time').value  = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('sv-cname').value = '';
+  document.getElementById('sv-cphone').value= '';
+  document.getElementById('sv-loc').value   = '';
+  document.getElementById('sv-rem').value   = '';
+  document.getElementById('sv-geobox').className = 'sv-box';
+  document.getElementById('sv-geobox').innerHTML = '';
+
+  var mine = getVis();
+  document.getElementById('svLeadNames').innerHTML = mine.map(function(l){
+    return '<option value="'+escHtml(l.name)+'">';
+  }).join('');
+  document.getElementById('sv-lead').innerHTML = '<option value="">Not linked — standalone visit</option>' +
+    mine.map(function(l){
+      return '<option value="'+escHtml(l.id)+'">'+escHtml(l.name)+' · '+escHtml(l.phone||'')+'</option>';
+    }).join('');
+
+  document.getElementById('svMo').classList.add('open');
+  setTimeout(function(){ document.getElementById('sv-cname').focus(); }, 80);
+}
+
+function svLeadPicked(){
+  var id = document.getElementById('sv-lead').value;
+  if(!id) return;
+  var l = leads.filter(function(x){ return x.id === id; })[0];
+  if(!l) return;
+  document.getElementById('sv-cname').value  = l.name || '';
+  document.getElementById('sv-cphone').value = l.phone || '';
+  if(!document.getElementById('sv-loc').value && l.loc) document.getElementById('sv-loc').value = l.loc;
+}
+
+function svUseLocation(){
+  var box = document.getElementById('sv-geobox');
+  box.className = 'sv-box on';
+  if(!navigator.geolocation){
+    box.className = 'sv-box on err';
+    box.innerHTML = 'This browser does not support location. Please type the address instead.';
+    return;
+  }
+  box.innerHTML = 'Getting your location…';
+  navigator.geolocation.getCurrentPosition(function(p){
+    var la = p.coords.latitude, ln = p.coords.longitude;
+    svGeo = { lat: la, lng: ln, acc: p.coords.accuracy,
+              url: 'https://www.google.com/maps?q='+la.toFixed(6)+','+ln.toFixed(6) };
+    box.className = 'sv-box on';
+    box.innerHTML = '✓ Location captured<br>Coordinates: <b>'+la.toFixed(6)+', '+ln.toFixed(6)+'</b><br>'+
+                    'Accuracy: <b>±'+Math.round(p.coords.accuracy)+' m</b><br>'+
+                    '<a class="sv-pin" style="margin-top:6px" target="_blank" rel="noopener" href="'+svGeo.url+'">📍 Open in Google Maps</a>';
+  }, function(e){
+    svGeo = null;
+    box.className = 'sv-box on err';
+    box.innerHTML = 'Could not get location — '+escHtml(e.message||'permission denied')+
+                    '.<br>No problem — just type the address above instead.';
+  }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 });
+}
+
+function svSave(){
+  if(!svCanAdd()){ showToast('You do not have permission to log site visits','e'); return; }
+
+  var name = document.getElementById('sv-cname').value.trim();
+  var phone= document.getElementById('sv-cphone').value.trim();
+  var rem  = document.getElementById('sv-rem').value.trim();
+  var date = document.getElementById('sv-date').value;
+  var time = document.getElementById('sv-time').value;
+  var locT = document.getElementById('sv-loc').value.trim();
+  var leadId = document.getElementById('sv-lead').value;
+
+  if(!name){ showToast('Client name is required','e');  document.getElementById('sv-cname').focus(); return; }
+  if(!phone){ showToast('Client phone is required','e'); document.getElementById('sv-cphone').focus(); return; }
+  if(!rem){ showToast('Remarks are required','e');       document.getElementById('sv-rem').focus(); return; }
+  if(!date){ showToast('Visit date is required','e'); return; }
+
+  var lead = leadId ? leads.filter(function(x){ return x.id === leadId; })[0] : null;
+
+  var row = {
+    visit_date: date,
+    visit_time: time || '',
+    doer_role: currentRole,
+    client_name: name,
+    client_phone: phone,
+    location_text: locT,
+    location_lat: svGeo ? svGeo.lat : null,
+    location_lng: svGeo ? svGeo.lng : null,
+    location_accuracy: svGeo ? Math.round(svGeo.acc) : null,
+    map_url: svGeo ? svGeo.url : '',
+    remarks: rem,
+    lead_id: lead ? lead.id : '',
+    lead_name: lead ? lead.name : ''
+  };
+
+  var btn = document.getElementById('svSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  setSS('saving','Saving...');
+
+  sbFetch('/site_visits','POST',row).then(function(res){
+    if(res && res[0]) siteVisits.unshift(res[0]);
+    else siteVisits.unshift(row);
+    setSS('saved','✓ Saved');
+
+    /* mirror into the Activity Log so the owner sees everything in one place */
+    var whereTxt = locT || (svGeo ? 'GPS location captured' : '');
+    logActivity('📍 Site Visit — '+name+(whereTxt ? ' ('+whereTxt+')' : ''),
+                lead || { id:'', name:name, phone:phone },
+                rem, svGeo ? svGeo.url : '');
+
+    closeMo('svMo');
+    renderVisits();
+    showToast('✓ Site visit saved');
+  }).catch(function(){
+    setSS('err','Save failed');
+    showToast('⚠ Save failed — check that the "site_visits" table exists in Supabase','e');
+  }).then(function(){
+    btn.disabled = false; btn.textContent = 'Save Visit';
+  });
+}
+
+function svClearFilters(){
+  ['svFrom','svTo','svSearch'].forEach(function(id){ var e = document.getElementById(id); if(e) e.value = ''; });
+  var r = document.getElementById('svFiltRole'); if(r) r.value = '';
+  renderVisits();
+}
+
+function svExportCsv(){
+  var rows = svRows();
+  if(!rows.length){ showToast('Nothing to export','e'); return; }
+  var head = ['Date','Time','Executive','Client Name','Client Phone','Location','Latitude','Longitude','Accuracy (m)','Map Link','Remarks','Linked Lead'];
+  var lines = [head.join(',')];
+  rows.forEach(function(v){
+    lines.push([v.visit_date, v.visit_time, ROLE_LABELS[v.doer_role]||v.doer_role,
+                v.client_name, v.client_phone, v.location_text,
+                v.location_lat, v.location_lng, v.location_accuracy,
+                v.map_url, v.remarks, v.lead_name]
+      .map(function(c){ return '"'+String(c==null?'':c).replace(/"/g,'""')+'"'; }).join(','));
+  });
+  var blob = new Blob(["﻿"+lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'site-visits-'+today()+'.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+/* ── wire up ── */
+(function svWire(){
+  var on = function(id, ev, fn){ var e = document.getElementById(id); if(e) e.addEventListener(ev, fn); };
+  on('nav-visits','click', function(){ showView('visits'); });
+  on('svAddBtn','click', svOpen);
+  on('svCloseX','click', function(){ closeMo('svMo'); });
+  on('svCancelBtn','click', function(){ closeMo('svMo'); });
+  on('svSaveBtn','click', svSave);
+  on('svGeoBtn','click', svUseLocation);
+  on('sv-lead','change', svLeadPicked);
+  on('svClearBtn','click', svClearFilters);
+  on('svCsvBtn','click', svExportCsv);
+  ['svFrom','svTo','svFiltRole'].forEach(function(id){ on(id,'change',renderVisits); });
+  on('svSearch','input', renderVisits);
+
+  /* run svInit() every time somebody logs in */
+  if(typeof enterApp === 'function'){
+    var _origEnterApp = enterApp;
+    enterApp = function(){ _origEnterApp.apply(this, arguments); svInit(); };
+  }
+})();
 </script>
+
+<!-- ══════════════ SITE VISIT ENTRY MODAL ══════════════ -->
+<div class="mo" id="svMo">
+  <div class="md">
+    <div class="mh">
+      <div class="mt">Log <span>Site Visit</span></div>
+      <button class="mc2" id="svCloseX">✕</button>
+    </div>
+    <div class="mb">
+
+      <div class="form-section-title">Visit Details</div>
+      <div class="fr">
+        <div class="fg"><label class="fl">Visit Date *</label><input class="fs" type="date" id="sv-date"></div>
+        <div class="fg"><label class="fl">Visit Time *</label><input class="fs" type="time" id="sv-time"></div>
+      </div>
+
+      <div class="form-section-title">Client</div>
+      <div class="fr">
+        <div class="fg">
+          <label class="fl">Client Name *</label>
+          <input class="fs" id="sv-cname" list="svLeadNames" placeholder="Type, or pick an existing lead" autocomplete="off">
+          <datalist id="svLeadNames"></datalist>
+        </div>
+        <div class="fg"><label class="fl">Client Phone *</label><input class="fs" type="tel" id="sv-cphone" placeholder="10-digit number"></div>
+      </div>
+      <div class="fr full">
+        <div class="fg">
+          <label class="fl">Link to an existing lead (optional)</label>
+          <select class="fs" id="sv-lead"><option value="">Not linked — standalone visit</option></select>
+          <div class="sv-hint">If linked, the client name and phone are filled in automatically.</div>
+        </div>
+      </div>
+
+      <div class="form-section-title">Location</div>
+      <div class="fr full">
+        <div class="fg">
+          <label class="fl">Address / Area</label>
+          <input class="fs" id="sv-loc" placeholder="e.g. Sector 62, Noida">
+          <button class="bs" id="svGeoBtn" style="margin-top:9px;align-self:flex-start">📍 Use My Current Location</button>
+          <div class="sv-hint">Optional. Coordinates are captured only when you tap this button and allow the browser prompt.</div>
+          <div class="sv-box" id="sv-geobox"></div>
+        </div>
+      </div>
+
+      <div class="form-section-title">Remarks</div>
+      <div class="fr full">
+        <div class="fg">
+          <label class="fl">What happened on this visit? *</label>
+          <textarea class="fs" id="sv-rem" style="min-height:84px;resize:vertical;line-height:1.55" placeholder="Measurements taken, requirement discussed, next step agreed..."></textarea>
+        </div>
+      </div>
+
+    </div>
+    <div class="mf">
+      <button class="bs" id="svCancelBtn">Cancel</button>
+      <button class="bp pri" id="svSaveBtn">Save Visit</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
