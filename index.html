@@ -794,6 +794,66 @@ td{padding:10px 12px;vertical-align:middle}
 <div class="sync-dot saved" id="syncDot"><div class="sdot"></div><span id="syncTxt">Synced</span></div>
 <div class="toast" id="toast"></div>
 
+
+<!-- ══════════════ SITE VISIT ENTRY MODAL ══════════════ -->
+<div class="mo" id="svMo">
+  <div class="md">
+    <div class="mh">
+      <div class="mt">Log <span>Site Visit</span></div>
+      <button class="mc2" id="svCloseX">✕</button>
+    </div>
+    <div class="mb">
+
+      <div class="form-section-title">Visit Details</div>
+      <div class="fr">
+        <div class="fg"><label class="fl">Visit Date *</label><input class="fs" type="date" id="sv-date"></div>
+        <div class="fg"><label class="fl">Visit Time *</label><input class="fs" type="time" id="sv-time"></div>
+      </div>
+
+      <div class="form-section-title">Client</div>
+      <div class="fr">
+        <div class="fg">
+          <label class="fl">Client Name *</label>
+          <input class="fs" id="sv-cname" list="svLeadNames" placeholder="Type, or pick an existing lead" autocomplete="off">
+          <datalist id="svLeadNames"></datalist>
+        </div>
+        <div class="fg"><label class="fl">Client Phone *</label><input class="fs" type="tel" id="sv-cphone" placeholder="10-digit number"></div>
+      </div>
+      <div class="fr full">
+        <div class="fg">
+          <label class="fl">Link to an existing lead (optional)</label>
+          <select class="fs" id="sv-lead"><option value="">Not linked — standalone visit</option></select>
+          <div class="sv-hint">If linked, the client name and phone are filled in automatically.</div>
+        </div>
+      </div>
+
+      <div class="form-section-title">Location</div>
+      <div class="fr full">
+        <div class="fg">
+          <label class="fl">Address / Area</label>
+          <input class="fs" id="sv-loc" placeholder="e.g. Sector 62, Noida">
+          <button class="bs" id="svGeoBtn" style="margin-top:9px;align-self:flex-start">📍 Use My Current Location</button>
+          <div class="sv-hint">Optional. Coordinates are captured only when you tap this button and allow the browser prompt.</div>
+          <div class="sv-box" id="sv-geobox"></div>
+        </div>
+      </div>
+
+      <div class="form-section-title">Remarks</div>
+      <div class="fr full">
+        <div class="fg">
+          <label class="fl">What happened on this visit? *</label>
+          <textarea class="fs" id="sv-rem" style="min-height:84px;resize:vertical;line-height:1.55" placeholder="Measurements taken, requirement discussed, next step agreed..."></textarea>
+        </div>
+      </div>
+
+    </div>
+    <div class="mf">
+      <button class="bs" id="svCancelBtn">Cancel</button>
+      <button class="bp pri" id="svSaveBtn">Save Visit</button>
+    </div>
+  </div>
+</div>
+
 <script>
 var SUPABASE_URL='https://duckuubnszaytuuerffx.supabase.co';
 var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR1Y2t1dWJuc3pheXR1dWVyZmZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4MjQ4NDMsImV4cCI6MjA4OTQwMDg0M30.Aoesp7WobjoyvQWFIIZkDpE0JIcvnX9lLlLihK0byLE';
@@ -1757,6 +1817,13 @@ function svExportCsv(){
 
 /* ── wire up ── */
 (function svWire(){
+  /* The enterApp wrapper must be installed immediately, before window.onload runs. */
+  if(typeof enterApp === 'function'){
+    var _origEnterApp = enterApp;
+    enterApp = function(){ _origEnterApp.apply(this, arguments); svInit(); };
+  }
+
+  function attach(){
   var on = function(id, ev, fn){ var e = document.getElementById(id); if(e) e.addEventListener(ev, fn); };
   on('nav-visits','click', function(){ showView('visits'); });
   on('svAddBtn','click', svOpen);
@@ -1769,72 +1836,12 @@ function svExportCsv(){
   on('svCsvBtn','click', svExportCsv);
   ['svFrom','svTo','svFiltRole'].forEach(function(id){ on(id,'change',renderVisits); });
   on('svSearch','input', renderVisits);
-
-  /* run svInit() every time somebody logs in */
-  if(typeof enterApp === 'function'){
-    var _origEnterApp = enterApp;
-    enterApp = function(){ _origEnterApp.apply(this, arguments); svInit(); };
   }
+
+  /* Elements may still be parsing when this runs, so wait for the DOM. */
+  if(document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', attach); }
+  else { attach(); }
 })();
 </script>
-
-<!-- ══════════════ SITE VISIT ENTRY MODAL ══════════════ -->
-<div class="mo" id="svMo">
-  <div class="md">
-    <div class="mh">
-      <div class="mt">Log <span>Site Visit</span></div>
-      <button class="mc2" id="svCloseX">✕</button>
-    </div>
-    <div class="mb">
-
-      <div class="form-section-title">Visit Details</div>
-      <div class="fr">
-        <div class="fg"><label class="fl">Visit Date *</label><input class="fs" type="date" id="sv-date"></div>
-        <div class="fg"><label class="fl">Visit Time *</label><input class="fs" type="time" id="sv-time"></div>
-      </div>
-
-      <div class="form-section-title">Client</div>
-      <div class="fr">
-        <div class="fg">
-          <label class="fl">Client Name *</label>
-          <input class="fs" id="sv-cname" list="svLeadNames" placeholder="Type, or pick an existing lead" autocomplete="off">
-          <datalist id="svLeadNames"></datalist>
-        </div>
-        <div class="fg"><label class="fl">Client Phone *</label><input class="fs" type="tel" id="sv-cphone" placeholder="10-digit number"></div>
-      </div>
-      <div class="fr full">
-        <div class="fg">
-          <label class="fl">Link to an existing lead (optional)</label>
-          <select class="fs" id="sv-lead"><option value="">Not linked — standalone visit</option></select>
-          <div class="sv-hint">If linked, the client name and phone are filled in automatically.</div>
-        </div>
-      </div>
-
-      <div class="form-section-title">Location</div>
-      <div class="fr full">
-        <div class="fg">
-          <label class="fl">Address / Area</label>
-          <input class="fs" id="sv-loc" placeholder="e.g. Sector 62, Noida">
-          <button class="bs" id="svGeoBtn" style="margin-top:9px;align-self:flex-start">📍 Use My Current Location</button>
-          <div class="sv-hint">Optional. Coordinates are captured only when you tap this button and allow the browser prompt.</div>
-          <div class="sv-box" id="sv-geobox"></div>
-        </div>
-      </div>
-
-      <div class="form-section-title">Remarks</div>
-      <div class="fr full">
-        <div class="fg">
-          <label class="fl">What happened on this visit? *</label>
-          <textarea class="fs" id="sv-rem" style="min-height:84px;resize:vertical;line-height:1.55" placeholder="Measurements taken, requirement discussed, next step agreed..."></textarea>
-        </div>
-      </div>
-
-    </div>
-    <div class="mf">
-      <button class="bs" id="svCancelBtn">Cancel</button>
-      <button class="bp pri" id="svSaveBtn">Save Visit</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>
