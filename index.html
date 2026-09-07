@@ -1066,6 +1066,12 @@ function renderActivityLog(){
     return true;
   });
 
+  /* oldest date first: 31/08 before 01/09 */
+  data=data.slice().sort(function(a,b){
+    var x=(a.log_date||'')+' '+(a.log_time||''), y=(b.log_date||'')+' '+(b.log_time||'');
+    return x<y?-1:(x>y?1:0);
+  });
+
   var uniqueLeads={},uniqueDoers={},todayCount=0,addedCount=0;
   data.forEach(function(r){
     if(r.lead_id)uniqueLeads[r.lead_id]=true;
