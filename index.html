@@ -1609,7 +1609,11 @@ function svRows(){
 function svVal(id){ var e = document.getElementById(id); return e ? (e.value||'') : ''; }
 
 function renderVisits(){
-  var rows = svRows(), n = today(), mon = n.slice(0,7);
+  var rows = svRows().slice().sort(function(a,b){
+    var x=(a.visit_date||'')+' '+(a.visit_time||''), y=(b.visit_date||'')+' '+(b.visit_time||'');
+    return x<y?-1:(x>y?1:0);
+  });
+  var n = today(), mon = n.slice(0,7);
   var todayN = 0, monthN = 0, gps = 0, clients = {};
   rows.forEach(function(v){
     if(v.visit_date === n) todayN++;
@@ -1654,7 +1658,7 @@ function renderVisits(){
     if(!loc) loc = '<span style="color:var(--dim)">—</span>';
 
     return '<tr>'+
-      '<td style="padding-left:16px;color:var(--dim)">'+(rows.length-i)+'</td>'+
+      '<td style="padding-left:16px;color:var(--dim)">'+(i+1)+'</td>'+
       '<td style="white-space:nowrap">'+fmtDate(v.visit_date)+'</td>'+
       '<td style="white-space:nowrap">'+escHtml(v.visit_time||'—')+'</td>'+
       '<td>'+actRoleBadge(v.doer_role)+'</td>'+
