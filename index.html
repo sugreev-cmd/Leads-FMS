@@ -310,8 +310,9 @@ td{padding:10px 12px;vertical-align:middle}
 .act-table tbody tr{border-bottom:1px solid var(--border)}.act-table tbody tr:hover{background:var(--bg)}
 .act-table td{padding:10px 14px;font-size:12px;color:var(--text);vertical-align:middle}
 /* Note chip in activity table */
-.act-note-chip{display:inline-block;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--sub);vertical-align:middle}
+.act-note-chip{display:inline-block;max-width:380px;white-space:pre-wrap;word-break:break-word;line-height:1.45;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--sub);vertical-align:middle}
 .act-note-chip.has-note{background:var(--blue-bg);border-color:rgba(37,99,235,.2);color:var(--blue)}
+.act-table td:nth-child(8){min-width:280px}
 /* Action type tag */
 .act-type-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap}
 .act-type-add{background:var(--green-bg);color:var(--green);border:1px solid rgba(5,150,105,.2)}
@@ -1095,7 +1096,7 @@ function renderActivityLog(){
   document.getElementById('actLogBody').innerHTML=data.length?data.map(function(r,i){
     var noteText=r.note_text||extractNoteFromAction(r.action_text)||'';
     var noteHtml=noteText
-      ?'<span class="act-note-chip has-note" title="'+escHtml(noteText)+'">'+escHtml(noteText.length>40?noteText.slice(0,40)+'…':noteText)+'</span>'
+      ?'<span class="act-note-chip has-note" title="'+escHtml(noteText)+'">'+escHtml(noteText)+'</span>'
       :'<span style="color:var(--dim);font-size:10px">—</span>';
     var proofHtml=(r.proof_url&&isValidUrl(r.proof_url))
       ?'<a class="proof-link-chip" href="'+escHtml(r.proof_url)+'" target="_blank" rel="noopener">🔗 View Proof</a>'
